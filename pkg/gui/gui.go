@@ -17,12 +17,14 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
 	"github.com/jesseduffield/lazygit/pkg/common"
 	"github.com/jesseduffield/lazygit/pkg/config"
+	"github.com/jesseduffield/lazygit/pkg/gui/controllers"
 	"github.com/jesseduffield/lazygit/pkg/gui/filetree"
 	"github.com/jesseduffield/lazygit/pkg/gui/lbl"
 	"github.com/jesseduffield/lazygit/pkg/gui/mergeconflicts"
 	"github.com/jesseduffield/lazygit/pkg/gui/modes/cherrypicking"
 	"github.com/jesseduffield/lazygit/pkg/gui/modes/diffing"
 	"github.com/jesseduffield/lazygit/pkg/gui/modes/filtering"
+	"github.com/jesseduffield/lazygit/pkg/gui/popup"
 	"github.com/jesseduffield/lazygit/pkg/gui/presentation/authors"
 	"github.com/jesseduffield/lazygit/pkg/gui/presentation/graph"
 	"github.com/jesseduffield/lazygit/pkg/gui/style"
@@ -73,11 +75,11 @@ type Gui struct {
 	OSCommand *oscommands.OSCommand
 
 	// this is the state of the GUI for the current repo
-	State *guiState
+	State *GuiRepoState
 
 	// this is a mapping of repos to gui states, so that we can restore the original
 	// gui state when returning from a subrepo
-	RepoStateMap         map[Repo]*guiState
+	RepoStateMap         map[Repo]*GuiRepoState
 	Config               config.AppConfigurer
 	Updater              *updates.Updater
 	statusManager        *statusManager
@@ -99,7 +101,7 @@ type Gui struct {
 
 	// when you enter into a submodule we'll append the superproject's path to this array
 	// so that you can return to the superproject
-	RepoPathStack []string
+	RepoPathStack *utils.StringStack
 
 	// this tells us whether our views have been initially set up
 	ViewsSetup bool
@@ -119,9 +121,84 @@ type Gui struct {
 
 	suggestionsAsyncHandler *tasks.AsyncHandler
 
-	PopupHandler PopupHandler
+	PopupHandler popup.IPopupHandler
 
 	IsNewRepo bool
+
+	Controllers Controllers
+}
+
+type GuiRepoState struct {
+	// the file panels (files and commit files) can render as a tree, so we have
+	// managers for them which handle rendering a flat list of files in tree form
+	FileManager       *filetree.FileManager
+	CommitFileManager *filetree.CommitFileManager
+	Submodules        []*models.SubmoduleConfig
+	Branches          []*models.Branch
+	Commits           []*models.Commit
+	StashEntries      []*models.StashEntry
+	SubCommits        []*models.Commit
+	Remotes           []*models.Remote
+	RemoteBranches    []*models.RemoteBranch
+	Tags              []*models.Tag
+	// FilteredReflogCommits are the ones that appear in the reflog panel.
+	// when in filtering mode we only include the ones that match the given path
+	FilteredReflogCommits []*models.Commit
+	// ReflogCommits are the ones used by the branches panel to obtain recency values
+	// if we're not in filtering mode, CommitFiles and FilteredReflogCommits will be
+	// one and the same
+	ReflogCommits []*models.Commit
+
+	// Suggestions will sometimes appear when typing into a prompt
+	Suggestions    []*types.Suggestion
+	MenuItems      []*popup.MenuItem
+	Updating       bool
+	Panels         *panelStates
+	SplitMainPanel bool
+	MainContext    ContextKey // used to keep the main and secondary views' contexts in sync
+
+	IsRefreshingFiles bool
+	Searching         searchingState
+	Ptmx              *os.File
+	StartupStage      StartupStage // Allows us to not load everything at once
+
+	Modes Modes
+
+	ContextManager    ContextManager
+	Contexts          ContextTree
+	ViewContextMap    map[string]Context
+	ViewTabContextMap map[string][]tabContext
+
+	// WindowViewNameMap is a mapping of windows to the current view of that window.
+	// Some views move between windows for example the commitFiles view and when cycling through
+	// side windows we need to know which view to give focus to for a given window
+	WindowViewNameMap map[string]string
+
+	// tells us whether we've set up our views for the current repo. We'll need to
+	// do this whenever we switch back and forth between repos to get the views
+	// back in sync with the repo state
+	ViewsSetup bool
+
+	// for displaying suggestions while typing in a file name
+	FilesTrie *patricia.Trie
+
+	// this is the message of the last failed commit attempt
+	failedCommitMessage string
+
+	// TODO: move these into the gui struct
+	// flag as to whether or not the diff view should ignore whitespace
+	IgnoreWhitespaceInDiffView bool
+	ScreenMode                 WindowMaximisation
+	OldInformation             string
+	PrevMainWidth              int
+	PrevMainHeight             int
+	// if this is true, we'll load our commits using `git log --all`
+	ShowWholeGitGraph bool
+	RetainOriginalDir bool
+}
+
+type Controllers struct {
+	Submodules *controllers.SubmodulesController
 }
 
 type listPanelState struct {
@@ -286,72 +363,6 @@ type guiMutexes struct {
 	SubprocessMutex       sync.Mutex
 }
 
-type guiState struct {
-	// the file panels (files and commit files) can render as a tree, so we have
-	// managers for them which handle rendering a flat list of files in tree form
-	FileManager       *filetree.FileManager
-	CommitFileManager *filetree.CommitFileManager
-	Submodules        []*models.SubmoduleConfig
-	Branches          []*models.Branch
-	Commits           []*models.Commit
-	StashEntries      []*models.StashEntry
-	// Suggestions will sometimes appear when typing into a prompt
-	Suggestions []*types.Suggestion
-	// FilteredReflogCommits are the ones that appear in the reflog panel.
-	// when in filtering mode we only include the ones that match the given path
-	FilteredReflogCommits []*models.Commit
-	// ReflogCommits are the ones used by the branches panel to obtain recency values
-	// if we're not in filtering mode, CommitFiles and FilteredReflogCommits will be
-	// one and the same
-	ReflogCommits     []*models.Commit
-	SubCommits        []*models.Commit
-	Remotes           []*models.Remote
-	RemoteBranches    []*models.RemoteBranch
-	Tags              []*models.Tag
-	MenuItems         []*menuItem
-	Updating          bool
-	Panels            *panelStates
-	SplitMainPanel    bool
-	MainContext       ContextKey // used to keep the main and secondary views' contexts in sync
-	RetainOriginalDir bool
-	IsRefreshingFiles bool
-	Searching         searchingState
-	// if this is true, we'll load our commits using `git log --all`
-	ShowWholeGitGraph bool
-	ScreenMode        WindowMaximisation
-	Ptmx              *os.File
-	PrevMainWidth     int
-	PrevMainHeight    int
-	OldInformation    string
-	StartupStage      StartupStage // Allows us to not load everything at once
-
-	Modes Modes
-
-	ContextManager    ContextManager
-	Contexts          ContextTree
-	ViewContextMap    map[string]Context
-	ViewTabContextMap map[string][]tabContext
-
-	// WindowViewNameMap is a mapping of windows to the current view of that window.
-	// Some views move between windows for example the commitFiles view and when cycling through
-	// side windows we need to know which view to give focus to for a given window
-	WindowViewNameMap map[string]string
-
-	// tells us whether we've set up our views for the current repo. We'll need to
-	// do this whenever we switch back and forth between repos to get the views
-	// back in sync with the repo state
-	ViewsSetup bool
-
-	// flag as to whether or not the diff view should ignore whitespace
-	IgnoreWhitespaceInDiffView bool
-
-	// for displaying suggestions while typing in a file name
-	FilesTrie *patricia.Trie
-
-	// this is the message of the last failed commit attempt
-	failedCommitMessage string
-}
-
 // reuseState determines if we pull the repo state from our repo state map or
 // just re-initialize it. For now we're only re-using state when we're going
 // in and out of submodules, for the sake of having the cursor back on the submodule
@@ -387,7 +398,7 @@ func (gui *Gui) resetState(filterPath string, reuseState bool) {
 		initialContext = contexts.BranchCommits
 	}
 
-	gui.State = &guiState{
+	gui.State = &GuiRepoState{
 		FileManager:           filetree.NewFileManager(make([]*models.File, 0), gui.Log, showTree),
 		CommitFileManager:     filetree.NewCommitFileManager(make([]*models.CommitFile, 0), gui.Log, showTree),
 		Commits:               make([]*models.Commit, 0),
@@ -432,6 +443,21 @@ func (gui *Gui) resetState(filterPath string, reuseState bool) {
 	gui.RepoStateMap[Repo(currentDir)] = gui.State
 }
 
+type guiCommon struct {
+	gui *Gui
+	popup.IPopupHandler
+}
+
+var _ controllers.IGuiCommon = &guiCommon{}
+
+func (self *guiCommon) LogAction(msg string) {
+	self.gui.logAction(msg)
+}
+
+func (self *guiCommon) Refresh(opts types.RefreshOptions) error {
+	return self.gui.refreshSidePanels(opts)
+}
+
 // for now the split view will always be on
 // NewGui builds a new gui handler
 func NewGui(
@@ -449,8 +475,8 @@ func NewGui(
 		statusManager:           &statusManager{},
 		viewBufferManagerMap:    map[string]*tasks.ViewBufferManager{},
 		showRecentRepos:         showRecentRepos,
-		RepoPathStack:           []string{},
-		RepoStateMap:            map[Repo]*guiState{},
+		RepoPathStack:           &utils.StringStack{},
+		RepoStateMap:            map[Repo]*GuiRepoState{},
 		CmdLog:                  []string{},
 		suggestionsAsyncHandler: tasks.NewAsyncHandler(),
 
@@ -480,20 +506,34 @@ func NewGui(
 		return nil, err
 	}
 
+	guiCommon := &guiCommon{gui: gui, IPopupHandler: gui.PopupHandler}
+
 	gui.resetState(filterPath, false)
 
 	gui.watchFilesForChanges()
 
-	gui.PopupHandler = NewPopupHandler(
+	gui.PopupHandler = popup.NewPopupHandler(
 		cmn,
 		gui.createPopupPanel,
-		func() error { return gui.refreshSidePanels(refreshOptions{mode: ASYNC}) },
+		func() error { return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC}) },
 		func() error { return gui.closeConfirmationPrompt(false) },
 		gui.createMenu,
 		gui.withWaitingStatus,
 	)
 
 	authors.SetCustomAuthors(gui.UserConfig.Gui.AuthorColors)
+
+	gui.Controllers = Controllers{
+		Submodules: controllers.NewSubmodulesController(
+			cmn,
+			guiCommon,
+			gui.enterSubmodule,
+			gui.Git,
+			gui.State.FileManager,
+			gui.State.Submodules,
+			gui.getSelectedSubmodule,
+		),
+	}
 
 	return gui, nil
 }
@@ -618,7 +658,7 @@ func (gui *Gui) runSubprocessWithSuspenseAndRefresh(subprocess oscommands.ICmdOb
 		return err
 	}
 
-	if err := gui.refreshSidePanels(refreshOptions{mode: ASYNC}); err != nil {
+	if err := gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC}); err != nil {
 		return err
 	}
 
@@ -686,7 +726,7 @@ func (gui *Gui) loadNewRepo() error {
 		return err
 	}
 
-	if err := gui.refreshSidePanels(refreshOptions{mode: ASYNC}); err != nil {
+	if err := gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC}); err != nil {
 		return err
 	}
 
@@ -719,11 +759,11 @@ func (gui *Gui) showIntroPopupMessage(done chan struct{}) error {
 		return gui.Config.SaveAppState()
 	}
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:         "",
-		prompt:        gui.Tr.IntroPopupMessage,
-		handleConfirm: onConfirm,
-		handleClose:   onConfirm,
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:         "",
+		Prompt:        gui.Tr.IntroPopupMessage,
+		HandleConfirm: onConfirm,
+		HandleClose:   onConfirm,
 	})
 }
 
@@ -754,9 +794,9 @@ func (gui *Gui) startBackgroundFetch() {
 	}
 	err := gui.backgroundFetch()
 	if err != nil && strings.Contains(err.Error(), "exit status 128") && isNew {
-		_ = gui.PopupHandler.Ask(askOpts{
-			title:  gui.Tr.NoAutomaticGitFetchTitle,
-			prompt: gui.Tr.NoAutomaticGitFetchBody,
+		_ = gui.PopupHandler.Ask(popup.AskOpts{
+			Title:  gui.Tr.NoAutomaticGitFetchTitle,
+			Prompt: gui.Tr.NoAutomaticGitFetchBody,
 		})
 	} else {
 		gui.goEvery(time.Second*time.Duration(userConfig.Refresher.FetchInterval), gui.stopChan, func() error {

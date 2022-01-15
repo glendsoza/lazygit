@@ -11,6 +11,8 @@ import (
 	"github.com/jesseduffield/gocui"
 	"github.com/jesseduffield/lazygit/pkg/commands/types/enums"
 	"github.com/jesseduffield/lazygit/pkg/gui/mergeconflicts"
+	"github.com/jesseduffield/lazygit/pkg/gui/popup"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
 func (gui *Gui) handleSelectPrevConflictHunk() error {
@@ -249,7 +251,7 @@ func (gui *Gui) getMergingOptions() map[string]string {
 }
 
 func (gui *Gui) handleEscapeMerge() error {
-	if err := gui.refreshSidePanels(refreshOptions{scope: []RefreshableView{FILES}}); err != nil {
+	if err := gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}}); err != nil {
 		return err
 	}
 
@@ -260,7 +262,7 @@ func (gui *Gui) handleCompleteMerge() error {
 	if err := gui.stageSelectedFile(); err != nil {
 		return err
 	}
-	if err := gui.refreshSidePanels(refreshOptions{scope: []RefreshableView{FILES}}); err != nil {
+	if err := gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}}); err != nil {
 		return err
 	}
 
@@ -289,18 +291,18 @@ func (gui *Gui) escapeMerge() error {
 func (gui *Gui) promptToContinueRebase() error {
 	gui.takeOverMergeConflictScrolling()
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:               "continue",
-		prompt:              gui.Tr.ConflictsResolved,
-		handlersManageFocus: true,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:               "continue",
+		Prompt:              gui.Tr.ConflictsResolved,
+		HandlersManageFocus: true,
+		HandleConfirm: func() error {
 			if err := gui.pushContext(gui.State.Contexts.Files); err != nil {
 				return err
 			}
 
 			return gui.genericMergeCommand(REBASE_OPTION_CONTINUE)
 		},
-		handleClose: func() error {
+		HandleClose: func() error {
 			return gui.pushContext(gui.State.Contexts.Files)
 		},
 	})

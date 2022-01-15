@@ -7,6 +7,7 @@ import (
 
 	"github.com/jesseduffield/lazygit/pkg/commands/types/enums"
 	"github.com/jesseduffield/lazygit/pkg/constants"
+	"github.com/jesseduffield/lazygit/pkg/gui/popup"
 	"github.com/jesseduffield/lazygit/pkg/gui/presentation"
 	"github.com/jesseduffield/lazygit/pkg/gui/style"
 	"github.com/jesseduffield/lazygit/pkg/utils"
@@ -138,20 +139,20 @@ func (gui *Gui) askForConfigFile(action func(file string) error) error {
 	case 1:
 		return action(confPaths[0])
 	default:
-		menuItems := make([]*menuItem, len(confPaths))
+		menuItems := make([]*popup.MenuItem, len(confPaths))
 		for i, file := range confPaths {
 			i := i
-			menuItems[i] = &menuItem{
-				displayString: file,
-				onPress: func() error {
+			menuItems[i] = &popup.MenuItem{
+				DisplayString: file,
+				OnPress: func() error {
 					return action(confPaths[i])
 				},
 			}
 		}
-		return gui.PopupHandler.Menu(createMenuOptions{
-			title:      gui.Tr.SelectConfigFile,
-			items:      menuItems,
-			hideCancel: true,
+		return gui.PopupHandler.Menu(popup.CreateMenuOptions{
+			Title:      gui.Tr.SelectConfigFile,
+			Items:      menuItems,
+			HideCancel: true,
 		})
 	}
 }

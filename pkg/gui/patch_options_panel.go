@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/jesseduffield/lazygit/pkg/commands/types/enums"
+	"github.com/jesseduffield/lazygit/pkg/gui/popup"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
 func (gui *Gui) handleCreatePatchOptionsMenu() error {
@@ -11,34 +13,34 @@ func (gui *Gui) handleCreatePatchOptionsMenu() error {
 		return gui.PopupHandler.ErrorMsg(gui.Tr.NoPatchError)
 	}
 
-	menuItems := []*menuItem{
+	menuItems := []*popup.MenuItem{
 		{
-			displayString: "reset patch",
-			onPress:       gui.handleResetPatch,
+			DisplayString: "reset patch",
+			OnPress:       gui.handleResetPatch,
 		},
 		{
-			displayString: "apply patch",
-			onPress:       func() error { return gui.handleApplyPatch(false) },
+			DisplayString: "apply patch",
+			OnPress:       func() error { return gui.handleApplyPatch(false) },
 		},
 		{
-			displayString: "apply patch in reverse",
-			onPress:       func() error { return gui.handleApplyPatch(true) },
+			DisplayString: "apply patch in reverse",
+			OnPress:       func() error { return gui.handleApplyPatch(true) },
 		},
 	}
 
 	if gui.Git.Patch.PatchManager.CanRebase && gui.Git.Status.WorkingTreeState() == enums.REBASE_MODE_NONE {
-		menuItems = append(menuItems, []*menuItem{
+		menuItems = append(menuItems, []*popup.MenuItem{
 			{
-				displayString: fmt.Sprintf("remove patch from original commit (%s)", gui.Git.Patch.PatchManager.To),
-				onPress:       gui.handleDeletePatchFromCommit,
+				DisplayString: fmt.Sprintf("remove patch from original commit (%s)", gui.Git.Patch.PatchManager.To),
+				OnPress:       gui.handleDeletePatchFromCommit,
 			},
 			{
-				displayString: "move patch out into index",
-				onPress:       gui.handleMovePatchIntoWorkingTree,
+				DisplayString: "move patch out into index",
+				OnPress:       gui.handleMovePatchIntoWorkingTree,
 			},
 			{
-				displayString: "move patch into new commit",
-				onPress:       gui.handlePullPatchIntoNewCommit,
+				DisplayString: "move patch into new commit",
+				OnPress:       gui.handlePullPatchIntoNewCommit,
 			},
 		}...)
 
@@ -49,10 +51,10 @@ func (gui *Gui) handleCreatePatchOptionsMenu() error {
 				menuItems = append(
 					menuItems[:1],
 					append(
-						[]*menuItem{
+						[]*popup.MenuItem{
 							{
-								displayString: fmt.Sprintf("move patch to selected commit (%s)", selectedCommit.Sha),
-								onPress:       gui.handleMovePatchToSelectedCommit,
+								DisplayString: fmt.Sprintf("move patch to selected commit (%s)", selectedCommit.Sha),
+								OnPress:       gui.handleMovePatchToSelectedCommit,
 							},
 						}, menuItems[1:]...,
 					)...,
@@ -61,7 +63,7 @@ func (gui *Gui) handleCreatePatchOptionsMenu() error {
 		}
 	}
 
-	return gui.PopupHandler.Menu(createMenuOptions{title: gui.Tr.PatchOptionsTitle, items: menuItems})
+	return gui.PopupHandler.Menu(popup.CreateMenuOptions{Title: gui.Tr.PatchOptionsTitle, Items: menuItems})
 }
 
 func (gui *Gui) getPatchCommitIndex() int {
@@ -140,10 +142,10 @@ func (gui *Gui) handleMovePatchIntoWorkingTree() error {
 	}
 
 	if len(gui.trackedFiles()) > 0 {
-		return gui.PopupHandler.Ask(askOpts{
-			title:  gui.Tr.MustStashTitle,
-			prompt: gui.Tr.MustStashWarning,
-			handleConfirm: func() error {
+		return gui.PopupHandler.Ask(popup.AskOpts{
+			Title:  gui.Tr.MustStashTitle,
+			Prompt: gui.Tr.MustStashWarning,
+			HandleConfirm: func() error {
 				return pull(true)
 			},
 		})
@@ -182,7 +184,7 @@ func (gui *Gui) handleApplyPatch(reverse bool) error {
 	if err := gui.Git.Patch.PatchManager.ApplyPatches(reverse); err != nil {
 		return gui.PopupHandler.Error(err)
 	}
-	return gui.refreshSidePanels(refreshOptions{mode: ASYNC})
+	return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
 }
 
 func (gui *Gui) handleResetPatch() error {

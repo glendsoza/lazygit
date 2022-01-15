@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
@@ -48,7 +49,7 @@ func (gui *Gui) handleSubmitCredential() error {
 		return err
 	}
 
-	return gui.refreshSidePanels(refreshOptions{mode: ASYNC})
+	return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
 }
 
 func (gui *Gui) handleCloseCredentialsView() error {

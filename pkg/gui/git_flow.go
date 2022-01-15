@@ -3,6 +3,7 @@ package gui
 import (
 	"fmt"
 
+	"github.com/jesseduffield/lazygit/pkg/gui/popup"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
@@ -20,9 +21,9 @@ func (gui *Gui) handleCreateGitFlowMenu() error {
 		return func() error {
 			title := utils.ResolvePlaceholderString(gui.Tr.NewGitFlowBranchPrompt, map[string]string{"branchType": branchType})
 
-			return gui.PopupHandler.Prompt(promptOpts{
-				title: title,
-				handleConfirm: func(name string) error {
+			return gui.PopupHandler.Prompt(popup.PromptOpts{
+				Title: title,
+				HandleConfirm: func(name string) error {
 					gui.logAction(gui.Tr.Actions.GitFlowStart)
 					return gui.runSubprocessWithSuspenseAndRefresh(
 						gui.Git.Flow.StartCmdObj(branchType, name),
@@ -32,31 +33,31 @@ func (gui *Gui) handleCreateGitFlowMenu() error {
 		}
 	}
 
-	return gui.PopupHandler.Menu(createMenuOptions{
-		title: "git flow",
-		items: []*menuItem{
+	return gui.PopupHandler.Menu(popup.CreateMenuOptions{
+		Title: "git flow",
+		Items: []*popup.MenuItem{
 			{
 				// not localising here because it's one to one with the actual git flow commands
-				displayString: fmt.Sprintf("finish branch '%s'", branch.Name),
-				onPress: func() error {
+				DisplayString: fmt.Sprintf("finish branch '%s'", branch.Name),
+				OnPress: func() error {
 					return gui.gitFlowFinishBranch(branch.Name)
 				},
 			},
 			{
-				displayString: "start feature",
-				onPress:       startHandler("feature"),
+				DisplayString: "start feature",
+				OnPress:       startHandler("feature"),
 			},
 			{
-				displayString: "start hotfix",
-				onPress:       startHandler("hotfix"),
+				DisplayString: "start hotfix",
+				OnPress:       startHandler("hotfix"),
 			},
 			{
-				displayString: "start bugfix",
-				onPress:       startHandler("bugfix"),
+				DisplayString: "start bugfix",
+				OnPress:       startHandler("bugfix"),
 			},
 			{
-				displayString: "start release",
-				onPress:       startHandler("release"),
+				DisplayString: "start release",
+				OnPress:       startHandler("release"),
 			},
 		},
 	})

@@ -3,16 +3,17 @@ package gui
 import (
 	"io"
 
+	"github.com/jesseduffield/lazygit/pkg/gui/popup"
 	"github.com/jesseduffield/lazygit/pkg/gui/style"
 )
 
 func (gui *Gui) handleCreateExtrasMenuPanel() error {
-	return gui.PopupHandler.Menu(createMenuOptions{
-		title: gui.Tr.CommandLog,
-		items: []*menuItem{
+	return gui.PopupHandler.Menu(popup.CreateMenuOptions{
+		Title: gui.Tr.CommandLog,
+		Items: []*popup.MenuItem{
 			{
-				displayString: gui.Tr.ToggleShowCommandLog,
-				onPress: func() error {
+				DisplayString: gui.Tr.ToggleShowCommandLog,
+				OnPress: func() error {
 					currentContext := gui.currentStaticContext()
 					if gui.ShowExtrasWindow && currentContext.GetKey() == COMMAND_LOG_CONTEXT_KEY {
 						if err := gui.returnFromContext(); err != nil {
@@ -27,8 +28,8 @@ func (gui *Gui) handleCreateExtrasMenuPanel() error {
 				},
 			},
 			{
-				displayString: gui.Tr.FocusCommandLog,
-				onPress:       gui.handleFocusCommandLog,
+				DisplayString: gui.Tr.FocusCommandLog,
+				OnPress:       gui.handleFocusCommandLog,
 			},
 		},
 	})

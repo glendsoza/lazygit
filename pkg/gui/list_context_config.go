@@ -6,6 +6,7 @@ import (
 	"github.com/jesseduffield/gocui"
 	"github.com/jesseduffield/lazygit/pkg/gui/presentation"
 	"github.com/jesseduffield/lazygit/pkg/gui/style"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
 func (gui *Gui) menuListContext() IListContext {
@@ -388,15 +389,15 @@ func (gui *Gui) getListContexts() []IListContext {
 	}
 }
 
-func (gui *Gui) getListContextKeyBindings() []*Binding {
-	bindings := make([]*Binding, 0)
+func (gui *Gui) getListContextKeyBindings() []*types.Binding {
+	bindings := make([]*types.Binding, 0)
 
 	keybindingConfig := gui.UserConfig.Keybinding
 
 	for _, listContext := range gui.getListContexts() {
 		listContext := listContext
 
-		bindings = append(bindings, []*Binding{
+		bindings = append(bindings, []*types.Binding{
 			{ViewName: listContext.GetViewName(), Tag: "navigation", Contexts: []string{string(listContext.GetKey())}, Key: gui.getKey(keybindingConfig.Universal.PrevItemAlt), Modifier: gocui.ModNone, Handler: listContext.handlePrevLine},
 			{ViewName: listContext.GetViewName(), Tag: "navigation", Contexts: []string{string(listContext.GetKey())}, Key: gui.getKey(keybindingConfig.Universal.PrevItem), Modifier: gocui.ModNone, Handler: listContext.handlePrevLine},
 			{ViewName: listContext.GetViewName(), Tag: "navigation", Contexts: []string{string(listContext.GetKey())}, Key: gocui.MouseWheelUp, Modifier: gocui.ModNone, Handler: listContext.handlePrevLine},
@@ -420,7 +421,7 @@ func (gui *Gui) getListContextKeyBindings() []*Binding {
 			gotoBottomHandler = gui.handleGotoBottomForCommitsPanel
 		}
 
-		bindings = append(bindings, []*Binding{
+		bindings = append(bindings, []*types.Binding{
 			{
 				ViewName:    listContext.GetViewName(),
 				Contexts:    []string{string(listContext.GetKey())},

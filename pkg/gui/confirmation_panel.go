@@ -5,48 +5,11 @@ import (
 	"strings"
 
 	"github.com/jesseduffield/gocui"
+	"github.com/jesseduffield/lazygit/pkg/gui/popup"
 	"github.com/jesseduffield/lazygit/pkg/gui/types"
 	"github.com/jesseduffield/lazygit/pkg/theme"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
-
-type createPopupPanelOpts struct {
-	hasLoader           bool
-	editable            bool
-	title               string
-	prompt              string
-	handleConfirm       func() error
-	handleConfirmPrompt func(string) error
-	handleClose         func() error
-
-	// when handlersManageFocus is true, do not return from the confirmation context automatically. It's expected that the handlers will manage focus, whether that means switching to another context, or manually returning the context.
-	handlersManageFocus bool
-
-	findSuggestionsFunc func(string) []*types.Suggestion
-}
-
-type askOpts struct {
-	title               string
-	prompt              string
-	handleConfirm       func() error
-	handleClose         func() error
-	handlersManageFocus bool
-}
-
-type promptOpts struct {
-	title               string
-	initialContent      string
-	findSuggestionsFunc func(string) []*types.Suggestion
-	handleConfirm       func(string) error
-}
-
-func (gui *Gui) ask(opts askOpts) error {
-	return gui.PopupHandler.Ask(opts)
-}
-
-func (gui *Gui) prompt(opts promptOpts) error {
-	return gui.PopupHandler.Prompt(opts)
-}
 
 func (gui *Gui) wrappedConfirmationFunction(handlersManageFocus bool, function func() error) func() error {
 	return func() error {
@@ -175,31 +138,31 @@ func (gui *Gui) prepareConfirmationPanel(
 	return nil
 }
 
-func (gui *Gui) createPopupPanel(opts createPopupPanelOpts) error {
+func (gui *Gui) createPopupPanel(opts popup.CreatePopupPanelOpts) error {
 	// remove any previous keybindings
 	gui.clearConfirmationViewKeyBindings()
 
 	err := gui.prepareConfirmationPanel(
-		opts.title,
-		opts.prompt,
-		opts.hasLoader,
-		opts.findSuggestionsFunc,
-		opts.editable,
+		opts.Title,
+		opts.Prompt,
+		opts.HasLoader,
+		opts.FindSuggestionsFunc,
+		opts.Editable,
 	)
 	if err != nil {
 		return err
 	}
 	confirmationView := gui.Views.Confirmation
-	confirmationView.Editable = opts.editable
+	confirmationView.Editable = opts.Editable
 	confirmationView.Editor = gocui.EditorFunc(gui.defaultEditor)
 
-	if opts.editable {
+	if opts.Editable {
 		textArea := confirmationView.TextArea
 		textArea.Clear()
-		textArea.TypeString(opts.prompt)
+		textArea.TypeString(opts.Prompt)
 		confirmationView.RenderTextArea()
 	} else {
-		if err := gui.renderString(confirmationView, opts.prompt); err != nil {
+		if err := gui.renderString(confirmationView, opts.Prompt); err != nil {
 			return err
 		}
 	}
@@ -211,7 +174,7 @@ func (gui *Gui) createPopupPanel(opts createPopupPanelOpts) error {
 	return gui.pushContext(gui.State.Contexts.Confirmation)
 }
 
-func (gui *Gui) setKeyBindings(opts createPopupPanelOpts) error {
+func (gui *Gui) setKeyBindings(opts popup.CreatePopupPanelOpts) error {
 	actions := utils.ResolvePlaceholderString(
 		gui.Tr.CloseConfirm,
 		map[string]string{
@@ -222,10 +185,10 @@ func (gui *Gui) setKeyBindings(opts createPopupPanelOpts) error {
 
 	_ = gui.renderString(gui.Views.Options, actions)
 	var onConfirm func() error
-	if opts.handleConfirmPrompt != nil {
-		onConfirm = gui.wrappedPromptConfirmationFunction(opts.handlersManageFocus, opts.handleConfirmPrompt, func() string { return gui.Views.Confirmation.TextArea.GetContent() })
+	if opts.HandleConfirmPrompt != nil {
+		onConfirm = gui.wrappedPromptConfirmationFunction(opts.HandlersManageFocus, opts.HandleConfirmPrompt, func() string { return gui.Views.Confirmation.TextArea.GetContent() })
 	} else {
-		onConfirm = gui.wrappedConfirmationFunction(opts.handlersManageFocus, opts.handleConfirm)
+		onConfirm = gui.wrappedConfirmationFunction(opts.HandlersManageFocus, opts.HandleConfirm)
 	}
 
 	type confirmationKeybinding struct {
@@ -236,8 +199,8 @@ func (gui *Gui) setKeyBindings(opts createPopupPanelOpts) error {
 
 	keybindingConfig := gui.UserConfig.Keybinding
 	onSuggestionConfirm := gui.wrappedPromptConfirmationFunction(
-		opts.handlersManageFocus,
-		opts.handleConfirmPrompt,
+		opts.HandlersManageFocus,
+		opts.HandleConfirmPrompt,
 		gui.getSelectedSuggestionValue,
 	)
 
@@ -255,7 +218,7 @@ func (gui *Gui) setKeyBindings(opts createPopupPanelOpts) error {
 		{
 			viewName: "confirmation",
 			key:      gui.getKey(keybindingConfig.Universal.Return),
-			handler:  gui.wrappedConfirmationFunction(opts.handlersManageFocus, opts.handleClose),
+			handler:  gui.wrappedConfirmationFunction(opts.HandlersManageFocus, opts.HandleClose),
 		},
 		{
 			viewName: "confirmation",
@@ -280,7 +243,7 @@ func (gui *Gui) setKeyBindings(opts createPopupPanelOpts) error {
 		{
 			viewName: "suggestions",
 			key:      gui.getKey(keybindingConfig.Universal.Return),
-			handler:  gui.wrappedConfirmationFunction(opts.handlersManageFocus, opts.handleClose),
+			handler:  gui.wrappedConfirmationFunction(opts.HandlersManageFocus, opts.HandleClose),
 		},
 		{
 			viewName: "suggestions",

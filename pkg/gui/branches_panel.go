@@ -7,6 +7,8 @@ import (
 
 	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
+	"github.com/jesseduffield/lazygit/pkg/gui/popup"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
@@ -133,7 +135,7 @@ func (gui *Gui) handleGitFetch() error {
 		if err := gui.fetch(); err != nil {
 			_ = gui.PopupHandler.Error(err)
 		}
-		return gui.refreshSidePanels(refreshOptions{mode: ASYNC})
+		return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
 	})
 }
 
@@ -142,15 +144,15 @@ func (gui *Gui) handleForceCheckout() error {
 	message := gui.Tr.SureForceCheckout
 	title := gui.Tr.ForceCheckoutBranch
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  title,
-		prompt: message,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  title,
+		Prompt: message,
+		HandleConfirm: func() error {
 			gui.logAction(gui.Tr.Actions.ForceCheckoutBranch)
 			if err := gui.Git.Branch.Checkout(branch.Name, git_commands.CheckoutOptions{Force: true}); err != nil {
 				_ = gui.PopupHandler.Error(err)
 			}
-			return gui.refreshSidePanels(refreshOptions{mode: ASYNC})
+			return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
 		},
 	})
 }
@@ -186,11 +188,11 @@ func (gui *Gui) handleCheckoutRef(ref string, options handleCheckoutRefOptions) 
 
 			if strings.Contains(err.Error(), "Please commit your changes or stash them before you switch branch") {
 				// offer to autostash changes
-				return gui.PopupHandler.Ask(askOpts{
+				return gui.PopupHandler.Ask(popup.AskOpts{
 
-					title:  gui.Tr.AutoStashTitle,
-					prompt: gui.Tr.AutoStashPrompt,
-					handleConfirm: func() error {
+					Title:  gui.Tr.AutoStashTitle,
+					Prompt: gui.Tr.AutoStashPrompt,
+					HandleConfirm: func() error {
 						if err := gui.Git.Stash.Save(gui.Tr.StashPrefix + ref); err != nil {
 							return gui.PopupHandler.Error(err)
 						}
@@ -200,12 +202,12 @@ func (gui *Gui) handleCheckoutRef(ref string, options handleCheckoutRefOptions) 
 
 						onSuccess()
 						if err := gui.Git.Stash.Pop(0); err != nil {
-							if err := gui.refreshSidePanels(refreshOptions{mode: BLOCK_UI}); err != nil {
+							if err := gui.refreshSidePanels(types.RefreshOptions{Mode: types.BLOCK_UI}); err != nil {
 								return err
 							}
 							return gui.PopupHandler.Error(err)
 						}
-						return gui.refreshSidePanels(refreshOptions{mode: BLOCK_UI})
+						return gui.refreshSidePanels(types.RefreshOptions{Mode: types.BLOCK_UI})
 					},
 				})
 			}
@@ -216,22 +218,22 @@ func (gui *Gui) handleCheckoutRef(ref string, options handleCheckoutRefOptions) 
 		}
 		onSuccess()
 
-		return gui.refreshSidePanels(refreshOptions{mode: BLOCK_UI})
+		return gui.refreshSidePanels(types.RefreshOptions{Mode: types.BLOCK_UI})
 	})
 }
 
 func (gui *Gui) handleCheckoutByName() error {
-	return gui.PopupHandler.Prompt(promptOpts{
-		title:               gui.Tr.BranchName + ":",
-		findSuggestionsFunc: gui.getRefsSuggestionsFunc(),
-		handleConfirm: func(response string) error {
+	return gui.PopupHandler.Prompt(popup.PromptOpts{
+		Title:               gui.Tr.BranchName + ":",
+		FindSuggestionsFunc: gui.getRefsSuggestionsFunc(),
+		HandleConfirm: func(response string) error {
 			gui.logAction("Checkout branch")
 			return gui.handleCheckoutRef(response, handleCheckoutRefOptions{
 				onRefNotFound: func(ref string) error {
-					return gui.PopupHandler.Ask(askOpts{
-						title:  gui.Tr.BranchNotFoundTitle,
-						prompt: fmt.Sprintf("%s %s%s", gui.Tr.BranchNotFoundPrompt, ref, "?"),
-						handleConfirm: func() error {
+					return gui.PopupHandler.Ask(popup.AskOpts{
+						Title:  gui.Tr.BranchNotFoundTitle,
+						Prompt: fmt.Sprintf("%s %s%s", gui.Tr.BranchNotFoundPrompt, ref, "?"),
+						HandleConfirm: func() error {
 							return gui.createNewBranchWithName(ref)
 						},
 					})
@@ -260,7 +262,7 @@ func (gui *Gui) createNewBranchWithName(newBranchName string) error {
 	}
 
 	gui.State.Panels.Branches.SelectedLineIdx = 0
-	return gui.refreshSidePanels(refreshOptions{mode: ASYNC})
+	return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
 }
 
 func (gui *Gui) handleDeleteBranch() error {
@@ -294,10 +296,10 @@ func (gui *Gui) deleteNamedBranch(selectedBranch *models.Branch, force bool) err
 		},
 	)
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  title,
-		prompt: message,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  title,
+		Prompt: message,
+		HandleConfirm: func() error {
 			gui.logAction(gui.Tr.Actions.DeleteBranch)
 			if err := gui.Git.Branch.Delete(selectedBranch.Name, force); err != nil {
 				errMessage := err.Error()
@@ -306,7 +308,7 @@ func (gui *Gui) deleteNamedBranch(selectedBranch *models.Branch, force bool) err
 				}
 				return gui.PopupHandler.ErrorMsg(errMessage)
 			}
-			return gui.refreshSidePanels(refreshOptions{mode: ASYNC, scope: []RefreshableView{BRANCHES}})
+			return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.BRANCHES}})
 		},
 	})
 }
@@ -331,10 +333,10 @@ func (gui *Gui) mergeBranchIntoCheckedOutBranch(branchName string) error {
 		},
 	)
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  gui.Tr.MergingTitle,
-		prompt: prompt,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  gui.Tr.MergingTitle,
+		Prompt: prompt,
+		HandleConfirm: func() error {
 			gui.logAction(gui.Tr.Actions.Merge)
 			err := gui.Git.Branch.Merge(branchName, git_commands.MergeOpts{})
 			return gui.handleGenericMergeCommandResult(err)
@@ -373,10 +375,10 @@ func (gui *Gui) handleRebaseOntoBranch(selectedBranchName string) error {
 		},
 	)
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  gui.Tr.RebasingTitle,
-		prompt: prompt,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  gui.Tr.RebasingTitle,
+		Prompt: prompt,
+		HandleConfirm: func() error {
 			gui.logAction(gui.Tr.Actions.RebaseBranch)
 			err := gui.Git.Rebase.RebaseBranch(selectedBranchName)
 			return gui.handleGenericMergeCommandResult(err)
@@ -419,7 +421,7 @@ func (gui *Gui) handleFastForward() error {
 			if err != nil {
 				_ = gui.PopupHandler.Error(err)
 			}
-			_ = gui.refreshSidePanels(refreshOptions{mode: ASYNC, scope: []RefreshableView{BRANCHES}})
+			_ = gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.BRANCHES}})
 		}
 
 		return nil
@@ -442,10 +444,10 @@ func (gui *Gui) handleRenameBranch() error {
 	}
 
 	promptForNewName := func() error {
-		return gui.PopupHandler.Prompt(promptOpts{
-			title:          gui.Tr.NewBranchNamePrompt + " " + branch.Name + ":",
-			initialContent: branch.Name,
-			handleConfirm: func(newBranchName string) error {
+		return gui.PopupHandler.Prompt(popup.PromptOpts{
+			Title:          gui.Tr.NewBranchNamePrompt + " " + branch.Name + ":",
+			InitialContent: branch.Name,
+			HandleConfirm: func(newBranchName string) error {
 				gui.logAction(gui.Tr.Actions.RenameBranch)
 				if err := gui.Git.Branch.Rename(branch.Name, newBranchName); err != nil {
 					return gui.PopupHandler.Error(err)
@@ -476,10 +478,10 @@ func (gui *Gui) handleRenameBranch() error {
 		return promptForNewName()
 	}
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:         gui.Tr.LcRenameBranch,
-		prompt:        gui.Tr.RenameBranchWarning,
-		handleConfirm: promptForNewName,
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:         gui.Tr.LcRenameBranch,
+		Prompt:        gui.Tr.RenameBranchWarning,
+		HandleConfirm: promptForNewName,
 	})
 }
 
@@ -511,10 +513,10 @@ func (gui *Gui) handleNewBranchOffCurrentItem() error {
 		prefilledName = strings.SplitAfterN(item.ID(), "/", 2)[1]
 	}
 
-	return gui.PopupHandler.Prompt(promptOpts{
-		title:          message,
-		initialContent: prefilledName,
-		handleConfirm: func(response string) error {
+	return gui.PopupHandler.Prompt(popup.PromptOpts{
+		Title:          message,
+		InitialContent: prefilledName,
+		HandleConfirm: func(response string) error {
 			gui.logAction(gui.Tr.Actions.CreateBranch)
 			if err := gui.Git.Branch.New(sanitizedBranchName(response), item.ID()); err != nil {
 				return err
@@ -534,7 +536,7 @@ func (gui *Gui) handleNewBranchOffCurrentItem() error {
 
 			gui.State.Panels.Branches.SelectedLineIdx = 0
 
-			return gui.refreshSidePanels(refreshOptions{mode: ASYNC})
+			return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
 		},
 	})
 }

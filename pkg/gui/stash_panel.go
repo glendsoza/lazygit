@@ -2,6 +2,8 @@ package gui
 
 import (
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
+	"github.com/jesseduffield/lazygit/pkg/gui/popup"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
 // list panel functions
@@ -61,10 +63,10 @@ func (gui *Gui) handleStashApply() error {
 		return apply()
 	}
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  gui.Tr.StashApply,
-		prompt: gui.Tr.SureApplyStashEntry,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  gui.Tr.StashApply,
+		Prompt: gui.Tr.SureApplyStashEntry,
+		HandleConfirm: func() error {
 			return apply()
 		},
 	})
@@ -90,10 +92,10 @@ func (gui *Gui) handleStashPop() error {
 		return pop()
 	}
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  gui.Tr.StashPop,
-		prompt: gui.Tr.SurePopStashEntry,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  gui.Tr.StashPop,
+		Prompt: gui.Tr.SurePopStashEntry,
+		HandleConfirm: func() error {
 			return pop()
 		},
 	})
@@ -105,10 +107,10 @@ func (gui *Gui) handleStashDrop() error {
 		return nil
 	}
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  gui.Tr.StashDrop,
-		prompt: gui.Tr.SureDropStashEntry,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  gui.Tr.StashDrop,
+		Prompt: gui.Tr.SureDropStashEntry,
+		HandleConfirm: func() error {
 			gui.logAction(gui.Tr.Actions.Stash)
 			if err := gui.Git.Stash.Drop(stashEntry.Index); err != nil {
 				return gui.PopupHandler.Error(err)
@@ -119,7 +121,7 @@ func (gui *Gui) handleStashDrop() error {
 }
 
 func (gui *Gui) postStashRefresh() error {
-	return gui.refreshSidePanels(refreshOptions{scope: []RefreshableView{STASH, FILES}})
+	return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.STASH, types.FILES}})
 }
 
 func (gui *Gui) handleStashSave(stashFunc func(message string) error) error {
@@ -127,13 +129,13 @@ func (gui *Gui) handleStashSave(stashFunc func(message string) error) error {
 		return gui.PopupHandler.ErrorMsg(gui.Tr.NoTrackedStagedFilesStash)
 	}
 
-	return gui.PopupHandler.Prompt(promptOpts{
-		title: gui.Tr.StashChanges,
-		handleConfirm: func(stashComment string) error {
+	return gui.PopupHandler.Prompt(popup.PromptOpts{
+		Title: gui.Tr.StashChanges,
+		HandleConfirm: func(stashComment string) error {
 			if err := stashFunc(stashComment); err != nil {
 				return gui.PopupHandler.Error(err)
 			}
-			return gui.refreshSidePanels(refreshOptions{scope: []RefreshableView{STASH, FILES}})
+			return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.STASH, types.FILES}})
 		},
 	})
 }

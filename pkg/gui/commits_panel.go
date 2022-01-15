@@ -6,6 +6,8 @@ import (
 
 	"github.com/jesseduffield/lazygit/pkg/commands/loaders"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
+	"github.com/jesseduffield/lazygit/pkg/gui/popup"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
@@ -165,10 +167,10 @@ func (gui *Gui) handleCommitSquashDown() error {
 		return nil
 	}
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  gui.Tr.Squash,
-		prompt: gui.Tr.SureSquashThisCommit,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  gui.Tr.Squash,
+		Prompt: gui.Tr.SureSquashThisCommit,
+		HandleConfirm: func() error {
 			return gui.PopupHandler.WithWaitingStatus(gui.Tr.SquashingStatus, func() error {
 				gui.logAction(gui.Tr.Actions.SquashCommitDown)
 				err := gui.Git.Rebase.InteractiveRebase(gui.State.Commits, gui.State.Panels.Commits.SelectedLineIdx, "squash")
@@ -195,10 +197,10 @@ func (gui *Gui) handleCommitFixup() error {
 		return nil
 	}
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  gui.Tr.Fixup,
-		prompt: gui.Tr.SureFixupThisCommit,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  gui.Tr.Fixup,
+		Prompt: gui.Tr.SureFixupThisCommit,
+		HandleConfirm: func() error {
 			return gui.PopupHandler.WithWaitingStatus(gui.Tr.FixingStatus, func() error {
 				gui.logAction(gui.Tr.Actions.FixupCommit)
 				err := gui.Git.Rebase.InteractiveRebase(gui.State.Commits, gui.State.Panels.Commits.SelectedLineIdx, "fixup")
@@ -232,16 +234,16 @@ func (gui *Gui) handleRewordCommit() error {
 	}
 
 	// TODO: use the commit message panel here
-	return gui.PopupHandler.Prompt(promptOpts{
-		title:          gui.Tr.LcRewordCommit,
-		initialContent: message,
-		handleConfirm: func(response string) error {
+	return gui.PopupHandler.Prompt(popup.PromptOpts{
+		Title:          gui.Tr.LcRewordCommit,
+		InitialContent: message,
+		HandleConfirm: func(response string) error {
 			gui.logAction(gui.Tr.Actions.RewordCommit)
 			if err := gui.Git.Rebase.RewordCommit(gui.State.Commits, gui.State.Panels.Commits.SelectedLineIdx, response); err != nil {
 				return gui.PopupHandler.Error(err)
 			}
 
-			return gui.refreshSidePanels(refreshOptions{mode: ASYNC})
+			return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
 		},
 	})
 }
@@ -314,10 +316,10 @@ func (gui *Gui) handleCommitDelete() error {
 		return nil
 	}
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  gui.Tr.DeleteCommitTitle,
-		prompt: gui.Tr.DeleteCommitPrompt,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  gui.Tr.DeleteCommitTitle,
+		Prompt: gui.Tr.DeleteCommitPrompt,
+		HandleConfirm: func() error {
 			return gui.PopupHandler.WithWaitingStatus(gui.Tr.DeletingStatus, func() error {
 				gui.logAction(gui.Tr.Actions.DropCommit)
 				err := gui.Git.Rebase.InteractiveRebase(gui.State.Commits, gui.State.Panels.Commits.SelectedLineIdx, "drop")
@@ -423,10 +425,10 @@ func (gui *Gui) handleCommitAmendTo() error {
 		return err
 	}
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  gui.Tr.AmendCommitTitle,
-		prompt: gui.Tr.AmendCommitPrompt,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  gui.Tr.AmendCommitTitle,
+		Prompt: gui.Tr.AmendCommitPrompt,
+		HandleConfirm: func() error {
 			return gui.PopupHandler.WithWaitingStatus(gui.Tr.AmendingStatus, func() error {
 				gui.logAction(gui.Tr.Actions.AmendCommit)
 				err := gui.Git.Rebase.AmendTo(gui.State.Commits[gui.State.Panels.Commits.SelectedLineIdx].Sha)
@@ -473,7 +475,7 @@ func (gui *Gui) handleCommitRevert() error {
 }
 
 func (gui *Gui) createRevertMergeCommitMenu(commit *models.Commit) error {
-	menuItems := make([]*menuItem, len(commit.Parents))
+	menuItems := make([]*popup.MenuItem, len(commit.Parents))
 	for i, parentSha := range commit.Parents {
 		i := i
 		message, err := gui.Git.Commit.GetCommitMessageFirstLine(parentSha)
@@ -481,9 +483,9 @@ func (gui *Gui) createRevertMergeCommitMenu(commit *models.Commit) error {
 			return gui.PopupHandler.Error(err)
 		}
 
-		menuItems[i] = &menuItem{
-			displayString: fmt.Sprintf("%s: %s", utils.SafeTruncate(parentSha, 8), message),
-			onPress: func() error {
+		menuItems[i] = &popup.MenuItem{
+			DisplayString: fmt.Sprintf("%s: %s", utils.SafeTruncate(parentSha, 8), message),
+			OnPress: func() error {
 				parentNumber := i + 1
 				gui.logAction(gui.Tr.Actions.RevertCommit)
 				if err := gui.Git.Commit.RevertMerge(commit.Sha, parentNumber); err != nil {
@@ -494,12 +496,12 @@ func (gui *Gui) createRevertMergeCommitMenu(commit *models.Commit) error {
 		}
 	}
 
-	return gui.PopupHandler.Menu(createMenuOptions{title: gui.Tr.SelectParentCommitForMerge, items: menuItems})
+	return gui.PopupHandler.Menu(popup.CreateMenuOptions{Title: gui.Tr.SelectParentCommitForMerge, Items: menuItems})
 }
 
 func (gui *Gui) afterRevertCommit() error {
 	gui.State.Panels.Commits.SelectedLineIdx++
-	return gui.refreshSidePanels(refreshOptions{mode: BLOCK_UI, scope: []RefreshableView{COMMITS, BRANCHES}})
+	return gui.refreshSidePanels(types.RefreshOptions{Mode: types.BLOCK_UI, Scope: []types.RefreshableView{types.COMMITS, types.BRANCHES}})
 }
 
 func (gui *Gui) handleViewCommitFiles() error {
@@ -528,16 +530,16 @@ func (gui *Gui) handleCreateFixupCommit() error {
 		},
 	)
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  gui.Tr.CreateFixupCommit,
-		prompt: prompt,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  gui.Tr.CreateFixupCommit,
+		Prompt: prompt,
+		HandleConfirm: func() error {
 			gui.logAction(gui.Tr.Actions.CreateFixupCommit)
 			if err := gui.Git.Commit.CreateFixupCommit(commit.Sha); err != nil {
 				return gui.PopupHandler.Error(err)
 			}
 
-			return gui.refreshSidePanels(refreshOptions{mode: ASYNC})
+			return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
 		},
 	})
 }
@@ -559,10 +561,10 @@ func (gui *Gui) handleSquashAllAboveFixupCommits() error {
 		},
 	)
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  gui.Tr.SquashAboveCommits,
-		prompt: prompt,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  gui.Tr.SquashAboveCommits,
+		Prompt: prompt,
+		HandleConfirm: func() error {
 			return gui.PopupHandler.WithWaitingStatus(gui.Tr.SquashingStatus, func() error {
 				gui.logAction(gui.Tr.Actions.SquashAllAboveFixupCommits)
 				err := gui.Git.Rebase.SquashAllAboveFixupCommits(commit.Sha)
@@ -582,18 +584,18 @@ func (gui *Gui) handleTagCommit() error {
 }
 
 func (gui *Gui) createTagMenu(commitSha string) error {
-	return gui.PopupHandler.Menu(createMenuOptions{
-		title: gui.Tr.TagMenuTitle,
-		items: []*menuItem{
+	return gui.PopupHandler.Menu(popup.CreateMenuOptions{
+		Title: gui.Tr.TagMenuTitle,
+		Items: []*popup.MenuItem{
 			{
-				displayString: gui.Tr.LcLightweightTag,
-				onPress: func() error {
+				DisplayString: gui.Tr.LcLightweightTag,
+				OnPress: func() error {
 					return gui.handleCreateLightweightTag(commitSha)
 				},
 			},
 			{
-				displayString: gui.Tr.LcAnnotatedTag,
-				onPress: func() error {
+				DisplayString: gui.Tr.LcAnnotatedTag,
+				OnPress: func() error {
 					return gui.handleCreateAnnotatedTag(commitSha)
 				},
 			},
@@ -603,16 +605,16 @@ func (gui *Gui) createTagMenu(commitSha string) error {
 
 func (gui *Gui) afterTagCreate() error {
 	gui.State.Panels.Tags.SelectedLineIdx = 0 // Set to the top
-	return gui.refreshSidePanels(refreshOptions{mode: ASYNC, scope: []RefreshableView{COMMITS, TAGS}})
+	return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.COMMITS, types.TAGS}})
 }
 
 func (gui *Gui) handleCreateAnnotatedTag(commitSha string) error {
-	return gui.PopupHandler.Prompt(promptOpts{
-		title: gui.Tr.TagNameTitle,
-		handleConfirm: func(tagName string) error {
-			return gui.PopupHandler.Prompt(promptOpts{
-				title: gui.Tr.TagMessageTitle,
-				handleConfirm: func(msg string) error {
+	return gui.PopupHandler.Prompt(popup.PromptOpts{
+		Title: gui.Tr.TagNameTitle,
+		HandleConfirm: func(tagName string) error {
+			return gui.PopupHandler.Prompt(popup.PromptOpts{
+				Title: gui.Tr.TagMessageTitle,
+				HandleConfirm: func(msg string) error {
 					gui.logAction(gui.Tr.Actions.CreateAnnotatedTag)
 					if err := gui.Git.Tag.CreateAnnotated(tagName, commitSha, msg); err != nil {
 						return gui.PopupHandler.Error(err)
@@ -625,9 +627,9 @@ func (gui *Gui) handleCreateAnnotatedTag(commitSha string) error {
 }
 
 func (gui *Gui) handleCreateLightweightTag(commitSha string) error {
-	return gui.PopupHandler.Prompt(promptOpts{
-		title: gui.Tr.TagNameTitle,
-		handleConfirm: func(tagName string) error {
+	return gui.PopupHandler.Prompt(popup.PromptOpts{
+		Title: gui.Tr.TagNameTitle,
+		HandleConfirm: func(tagName string) error {
 			gui.logAction(gui.Tr.Actions.CreateLightweightTag)
 			if err := gui.Git.Tag.CreateLightweight(tagName, commitSha); err != nil {
 				return gui.PopupHandler.Error(err)
@@ -643,10 +645,10 @@ func (gui *Gui) handleCheckoutCommit() error {
 		return nil
 	}
 
-	return gui.PopupHandler.Ask(askOpts{
-		title:  gui.Tr.LcCheckoutCommit,
-		prompt: gui.Tr.SureCheckoutThisCommit,
-		handleConfirm: func() error {
+	return gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  gui.Tr.LcCheckoutCommit,
+		Prompt: gui.Tr.SureCheckoutThisCommit,
+		HandleConfirm: func() error {
 			gui.logAction(gui.Tr.Actions.CheckoutCommit)
 			return gui.handleCheckoutRef(commit.Sha, handleCheckoutRefOptions{})
 		},
@@ -666,7 +668,7 @@ func (gui *Gui) handleOpenSearchForCommitsPanel(string) error {
 	// we usually lazyload these commits but now that we're searching we need to load them now
 	if gui.State.Panels.Commits.LimitCommits {
 		gui.State.Panels.Commits.LimitCommits = false
-		if err := gui.refreshSidePanels(refreshOptions{mode: ASYNC, scope: []RefreshableView{COMMITS}}); err != nil {
+		if err := gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.COMMITS}}); err != nil {
 			return err
 		}
 	}
@@ -678,7 +680,7 @@ func (gui *Gui) handleGotoBottomForCommitsPanel() error {
 	// we usually lazyload these commits but now that we're searching we need to load them now
 	if gui.State.Panels.Commits.LimitCommits {
 		gui.State.Panels.Commits.LimitCommits = false
-		if err := gui.refreshSidePanels(refreshOptions{mode: SYNC, scope: []RefreshableView{COMMITS}}); err != nil {
+		if err := gui.refreshSidePanels(types.RefreshOptions{Mode: types.SYNC, Scope: []types.RefreshableView{types.COMMITS}}); err != nil {
 			return err
 		}
 	}
@@ -714,12 +716,12 @@ func (gui *Gui) handleCopySelectedCommitMessageToClipboard() error {
 }
 
 func (gui *Gui) handleOpenLogMenu() error {
-	return gui.PopupHandler.Menu(createMenuOptions{
-		title: gui.Tr.LogMenuTitle,
-		items: []*menuItem{
+	return gui.PopupHandler.Menu(popup.CreateMenuOptions{
+		Title: gui.Tr.LogMenuTitle,
+		Items: []*popup.MenuItem{
 			{
-				displayString: gui.Tr.ToggleShowGitGraphAll,
-				onPress: func() error {
+				DisplayString: gui.Tr.ToggleShowGitGraphAll,
+				OnPress: func() error {
 					gui.State.ShowWholeGitGraph = !gui.State.ShowWholeGitGraph
 
 					if gui.State.ShowWholeGitGraph {
@@ -727,14 +729,14 @@ func (gui *Gui) handleOpenLogMenu() error {
 					}
 
 					return gui.PopupHandler.WithWaitingStatus(gui.Tr.LcLoadingCommits, func() error {
-						return gui.refreshSidePanels(refreshOptions{mode: SYNC, scope: []RefreshableView{COMMITS}})
+						return gui.refreshSidePanels(types.RefreshOptions{Mode: types.SYNC, Scope: []types.RefreshableView{types.COMMITS}})
 					})
 				},
 			},
 			{
-				displayString: gui.Tr.ShowGitGraph,
-				opensMenu:     true,
-				onPress: func() error {
+				DisplayString: gui.Tr.ShowGitGraph,
+				OpensMenu:     true,
+				OnPress: func() error {
 					onPress := func(value string) func() error {
 						return func() error {
 							gui.UserConfig.Git.Log.ShowGraph = value
@@ -742,52 +744,52 @@ func (gui *Gui) handleOpenLogMenu() error {
 							return nil
 						}
 					}
-					return gui.PopupHandler.Menu(createMenuOptions{
-						title: gui.Tr.LogMenuTitle,
-						items: []*menuItem{
+					return gui.PopupHandler.Menu(popup.CreateMenuOptions{
+						Title: gui.Tr.LogMenuTitle,
+						Items: []*popup.MenuItem{
 							{
-								displayString: "always",
-								onPress:       onPress("always"),
+								DisplayString: "always",
+								OnPress:       onPress("always"),
 							},
 							{
-								displayString: "never",
-								onPress:       onPress("never"),
+								DisplayString: "never",
+								OnPress:       onPress("never"),
 							},
 							{
-								displayString: "when maximised",
-								onPress:       onPress("when-maximised"),
+								DisplayString: "when maximised",
+								OnPress:       onPress("when-maximised"),
 							},
 						},
 					})
 				},
 			},
 			{
-				displayString: gui.Tr.SortCommits,
-				opensMenu:     true,
-				onPress: func() error {
+				DisplayString: gui.Tr.SortCommits,
+				OpensMenu:     true,
+				OnPress: func() error {
 					onPress := func(value string) func() error {
 						return func() error {
 							gui.UserConfig.Git.Log.Order = value
 							return gui.PopupHandler.WithWaitingStatus(gui.Tr.LcLoadingCommits, func() error {
-								return gui.refreshSidePanels(refreshOptions{mode: SYNC, scope: []RefreshableView{COMMITS}})
+								return gui.refreshSidePanels(types.RefreshOptions{Mode: types.SYNC, Scope: []types.RefreshableView{types.COMMITS}})
 							})
 						}
 					}
 
-					return gui.PopupHandler.Menu(createMenuOptions{
-						title: gui.Tr.LogMenuTitle,
-						items: []*menuItem{
+					return gui.PopupHandler.Menu(popup.CreateMenuOptions{
+						Title: gui.Tr.LogMenuTitle,
+						Items: []*popup.MenuItem{
 							{
-								displayString: "topological (topo-order)",
-								onPress:       onPress("topo-order"),
+								DisplayString: "topological (topo-order)",
+								OnPress:       onPress("topo-order"),
 							},
 							{
-								displayString: "date-order",
-								onPress:       onPress("date-order"),
+								DisplayString: "date-order",
+								OnPress:       onPress("date-order"),
 							},
 							{
-								displayString: "author-date-order",
-								onPress:       onPress("author-date-order"),
+								DisplayString: "author-date-order",
+								OnPress:       onPress("author-date-order"),
 							},
 						},
 					})

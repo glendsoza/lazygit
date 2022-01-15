@@ -12,7 +12,9 @@ import (
 	"github.com/jesseduffield/gocui"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/config"
+	"github.com/jesseduffield/lazygit/pkg/gui/popup"
 	"github.com/jesseduffield/lazygit/pkg/gui/style"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
@@ -70,10 +72,10 @@ func (gui *Gui) inputPrompt(prompt config.CustomCommandPrompt, promptResponses [
 		return gui.PopupHandler.Error(err)
 	}
 
-	return gui.PopupHandler.Prompt(promptOpts{
-		title:          title,
-		initialContent: initialValue,
-		handleConfirm: func(str string) error {
+	return gui.PopupHandler.Prompt(popup.PromptOpts{
+		Title:          title,
+		InitialContent: initialValue,
+		HandleConfirm: func(str string) error {
 			promptResponses[responseIdx] = str
 			return wrappedF()
 		},
@@ -82,7 +84,7 @@ func (gui *Gui) inputPrompt(prompt config.CustomCommandPrompt, promptResponses [
 
 func (gui *Gui) menuPrompt(prompt config.CustomCommandPrompt, promptResponses []string, responseIdx int, wrappedF func() error) error {
 	// need to make a menu here some how
-	menuItems := make([]*menuItem, len(prompt.Options))
+	menuItems := make([]*popup.MenuItem, len(prompt.Options))
 	for i, option := range prompt.Options {
 		option := option
 
@@ -106,9 +108,9 @@ func (gui *Gui) menuPrompt(prompt config.CustomCommandPrompt, promptResponses []
 			return gui.PopupHandler.Error(err)
 		}
 
-		menuItems[i] = &menuItem{
-			displayStrings: []string{name, style.FgYellow.Sprint(description)},
-			onPress: func() error {
+		menuItems[i] = &popup.MenuItem{
+			DisplayStrings: []string{name, style.FgYellow.Sprint(description)},
+			OnPress: func() error {
 				promptResponses[responseIdx] = value
 				return wrappedF()
 			},
@@ -120,7 +122,7 @@ func (gui *Gui) menuPrompt(prompt config.CustomCommandPrompt, promptResponses []
 		return gui.PopupHandler.Error(err)
 	}
 
-	return gui.PopupHandler.Menu(createMenuOptions{title: title, items: menuItems})
+	return gui.PopupHandler.Menu(popup.CreateMenuOptions{Title: title, Items: menuItems})
 }
 
 func (gui *Gui) GenerateMenuCandidates(commandOutput, filter, valueFormat, labelFormat string) ([]commandMenuEntry, error) {
@@ -214,12 +216,12 @@ func (gui *Gui) menuPromptFromCommand(prompt config.CustomCommandPrompt, promptR
 		return gui.PopupHandler.Error(err)
 	}
 
-	menuItems := make([]*menuItem, len(candidates))
+	menuItems := make([]*popup.MenuItem, len(candidates))
 	for i := range candidates {
 		i := i
-		menuItems[i] = &menuItem{
-			displayStrings: []string{candidates[i].label},
-			onPress: func() error {
+		menuItems[i] = &popup.MenuItem{
+			DisplayStrings: []string{candidates[i].label},
+			OnPress: func() error {
 				promptResponses[responseIdx] = candidates[i].value
 				return wrappedF()
 			},
@@ -231,7 +233,7 @@ func (gui *Gui) menuPromptFromCommand(prompt config.CustomCommandPrompt, promptR
 		return gui.PopupHandler.Error(err)
 	}
 
-	return gui.PopupHandler.Menu(createMenuOptions{title: title, items: menuItems})
+	return gui.PopupHandler.Menu(popup.CreateMenuOptions{Title: title, Items: menuItems})
 }
 
 func (gui *Gui) handleCustomCommandKeybinding(customCommand config.CustomCommand) func() error {
@@ -258,7 +260,7 @@ func (gui *Gui) handleCustomCommandKeybinding(customCommand config.CustomCommand
 				if err != nil {
 					return gui.PopupHandler.Error(err)
 				}
-				return gui.refreshSidePanels(refreshOptions{})
+				return gui.refreshSidePanels(types.RefreshOptions{})
 			})
 		}
 
@@ -296,8 +298,8 @@ func (gui *Gui) handleCustomCommandKeybinding(customCommand config.CustomCommand
 	}
 }
 
-func (gui *Gui) GetCustomCommandKeybindings() []*Binding {
-	bindings := []*Binding{}
+func (gui *Gui) GetCustomCommandKeybindings() []*types.Binding {
+	bindings := []*types.Binding{}
 	customCommands := gui.UserConfig.CustomCommands
 
 	for _, customCommand := range customCommands {
@@ -330,7 +332,7 @@ func (gui *Gui) GetCustomCommandKeybindings() []*Binding {
 			description = customCommand.Command
 		}
 
-		bindings = append(bindings, &Binding{
+		bindings = append(bindings, &types.Binding{
 			ViewName:    viewName,
 			Contexts:    contexts,
 			Key:         gui.getKey(customCommand.Key),

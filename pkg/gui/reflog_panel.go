@@ -2,6 +2,7 @@ package gui
 
 import (
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
+	"github.com/jesseduffield/lazygit/pkg/gui/popup"
 )
 
 // list panel functions
@@ -87,10 +88,10 @@ func (gui *Gui) handleCheckoutReflogCommit() error {
 		return nil
 	}
 
-	err := gui.PopupHandler.Ask(askOpts{
-		title:  gui.Tr.LcCheckoutCommit,
-		prompt: gui.Tr.SureCheckoutThisCommit,
-		handleConfirm: func() error {
+	err := gui.PopupHandler.Ask(popup.AskOpts{
+		Title:  gui.Tr.LcCheckoutCommit,
+		Prompt: gui.Tr.SureCheckoutThisCommit,
+		HandleConfirm: func() error {
 			gui.logAction(gui.Tr.Actions.CheckoutReflogCommit)
 			return gui.handleCheckoutRef(commit.Sha, handleCheckoutRefOptions{})
 		},
