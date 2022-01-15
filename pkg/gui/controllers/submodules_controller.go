@@ -49,45 +49,45 @@ func (self *SubmodulesController) Keybindings(getKey func(key string) interface{
 	return []*types.Binding{
 		{
 			Key:         getKey(config.Universal.GoInto),
-			Handler:     self.forSubmodule(self.Enter),
+			Handler:     self.forSubmodule(self.enter),
 			Description: self.Tr.LcEnterSubmodule,
 		},
 		{
 			Key:         getKey(config.Universal.Remove),
-			Handler:     self.forSubmodule(self.OpenResetMenu),
+			Handler:     self.forSubmodule(self.openResetMenu),
 			Description: self.Tr.LcViewResetAndRemoveOptions,
 			OpensMenu:   true,
 		},
 		{
 			Key:         getKey(config.Submodules.Update),
-			Handler:     self.forSubmodule(self.Update),
+			Handler:     self.forSubmodule(self.update),
 			Description: self.Tr.LcSubmoduleUpdate,
 		},
 		{
 			Key:         getKey(config.Universal.New),
-			Handler:     self.HandleAddSubmodule,
+			Handler:     self.add,
 			Description: self.Tr.LcAddSubmodule,
 		},
 		{
 			Key:         getKey(config.Universal.Edit),
-			Handler:     self.forSubmodule(self.EditURL),
+			Handler:     self.forSubmodule(self.editURL),
 			Description: self.Tr.LcEditSubmoduleUrl,
 		},
 		{
 			Key:         getKey(config.Submodules.Init),
-			Handler:     self.forSubmodule(self.Init),
+			Handler:     self.forSubmodule(self.init),
 			Description: self.Tr.LcInitSubmodule,
 		},
 		{
 			Key:         getKey(config.Submodules.BulkMenu),
-			Handler:     self.OpenBulkActionsMenu,
+			Handler:     self.openBulkActionsMenu,
 			Description: self.Tr.LcViewBulkSubmoduleOptions,
 			OpensMenu:   true,
 		},
 	}
 }
 
-func (self *SubmodulesController) Enter(submodule *models.SubmoduleConfig) error {
+func (self *SubmodulesController) enter(submodule *models.SubmoduleConfig) error {
 	return self.enterSubmoduleFn(submodule)
 }
 
@@ -97,7 +97,7 @@ func (self *SubmodulesController) Reset(submodule *models.SubmoduleConfig) error
 	})
 }
 
-func (self *SubmodulesController) HandleAddSubmodule() error {
+func (self *SubmodulesController) add() error {
 	return self.Prompt(popup.PromptOpts{
 		Title: self.Tr.LcNewSubmoduleUrl,
 		HandleConfirm: func(submoduleUrl string) error {
@@ -129,7 +129,7 @@ func (self *SubmodulesController) HandleAddSubmodule() error {
 	})
 }
 
-func (self *SubmodulesController) EditURL(submodule *models.SubmoduleConfig) error {
+func (self *SubmodulesController) editURL(submodule *models.SubmoduleConfig) error {
 	return self.Prompt(popup.PromptOpts{
 		Title:          fmt.Sprintf(self.Tr.LcUpdateSubmoduleUrl, submodule.Name),
 		InitialContent: submodule.Url,
@@ -147,7 +147,7 @@ func (self *SubmodulesController) EditURL(submodule *models.SubmoduleConfig) err
 	})
 }
 
-func (self *SubmodulesController) Init(submodule *models.SubmoduleConfig) error {
+func (self *SubmodulesController) init(submodule *models.SubmoduleConfig) error {
 	return self.WithWaitingStatus(self.Tr.LcInitializingSubmoduleStatus, func() error {
 		self.LogAction(self.Tr.Actions.InitialiseSubmodule)
 		err := self.git.Submodule.Init(submodule.Path)
@@ -159,7 +159,7 @@ func (self *SubmodulesController) Init(submodule *models.SubmoduleConfig) error 
 	})
 }
 
-func (self *SubmodulesController) OpenResetMenu(submodule *models.SubmoduleConfig) error {
+func (self *SubmodulesController) openResetMenu(submodule *models.SubmoduleConfig) error {
 	return self.Menu(popup.CreateMenuOptions{
 		Title: submodule.Name,
 		Items: []*popup.MenuItem{
@@ -179,7 +179,7 @@ func (self *SubmodulesController) OpenResetMenu(submodule *models.SubmoduleConfi
 	})
 }
 
-func (self *SubmodulesController) OpenBulkActionsMenu() error {
+func (self *SubmodulesController) openBulkActionsMenu() error {
 	return self.Menu(popup.CreateMenuOptions{
 		Title: self.Tr.LcBulkSubmoduleOptions,
 		Items: []*popup.MenuItem{
@@ -240,7 +240,7 @@ func (self *SubmodulesController) OpenBulkActionsMenu() error {
 	})
 }
 
-func (self *SubmodulesController) Update(submodule *models.SubmoduleConfig) error {
+func (self *SubmodulesController) update(submodule *models.SubmoduleConfig) error {
 	return self.WithWaitingStatus(self.Tr.LcUpdatingSubmoduleStatus, func() error {
 		self.LogAction(self.Tr.Actions.UpdateSubmodule)
 		err := self.git.Submodule.Update(submodule.Path)
