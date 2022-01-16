@@ -26,12 +26,12 @@ func (gui *Gui) recordCurrentDirectory() error {
 }
 
 func (gui *Gui) handleQuitWithoutChangingDirectory() error {
-	gui.State.RetainOriginalDir = true
+	gui.RetainOriginalDir = true
 	return gui.quit()
 }
 
 func (gui *Gui) handleQuit() error {
-	gui.State.RetainOriginalDir = false
+	gui.RetainOriginalDir = false
 	return gui.quit()
 }
 

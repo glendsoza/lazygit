@@ -124,7 +124,7 @@ func (gui *Gui) refreshCommitsWithLimit() error {
 			FilterPath:           gui.State.Modes.Filtering.GetPath(),
 			IncludeRebaseCommits: true,
 			RefName:              "HEAD",
-			All:                  gui.State.ShowWholeGitGraph,
+			All:                  gui.ShowWholeGitGraph,
 		},
 	)
 	if err != nil {
@@ -722,9 +722,9 @@ func (gui *Gui) handleOpenLogMenu() error {
 			{
 				DisplayString: gui.Tr.ToggleShowGitGraphAll,
 				OnPress: func() error {
-					gui.State.ShowWholeGitGraph = !gui.State.ShowWholeGitGraph
+					gui.ShowWholeGitGraph = !gui.ShowWholeGitGraph
 
-					if gui.State.ShowWholeGitGraph {
+					if gui.ShowWholeGitGraph {
 						gui.State.Panels.Commits.LimitCommits = false
 					}
 

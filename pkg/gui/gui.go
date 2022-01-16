@@ -126,6 +126,23 @@ type Gui struct {
 	IsNewRepo bool
 
 	Controllers Controllers
+
+	// flag as to whether or not the diff view should ignore whitespace
+	IgnoreWhitespaceInDiffView bool
+
+	// if this is true, we'll load our commits using `git log --all`
+	ShowWholeGitGraph bool
+	RetainOriginalDir bool
+
+	PrevLayout PrevLayout
+}
+
+// we keep track of some stuff from one render to the next to see if certain
+// things have changed
+type PrevLayout struct {
+	Information string
+	MainWidth   int
+	MainHeight  int
 }
 
 type GuiRepoState struct {
@@ -186,15 +203,7 @@ type GuiRepoState struct {
 	failedCommitMessage string
 
 	// TODO: move these into the gui struct
-	// flag as to whether or not the diff view should ignore whitespace
-	IgnoreWhitespaceInDiffView bool
-	ScreenMode                 WindowMaximisation
-	OldInformation             string
-	PrevMainWidth              int
-	PrevMainHeight             int
-	// if this is true, we'll load our commits using `git log --all`
-	ShowWholeGitGraph bool
-	RetainOriginalDir bool
+	ScreenMode WindowMaximisation
 }
 
 type Controllers struct {
@@ -522,11 +531,11 @@ func NewGui(
 	authors.SetCustomAuthors(gui.UserConfig.Gui.AuthorColors)
 
 	guiCommon := &guiCommon{gui: gui, IPopupHandler: gui.PopupHandler}
+	controllerCommon := &controllers.ControllerCommon{IGuiCommon: guiCommon, Common: cmn}
 
 	gui.Controllers = Controllers{
 		Submodules: controllers.NewSubmodulesController(
-			cmn,
-			guiCommon,
+			controllerCommon,
 			gui.enterSubmodule,
 			gui.Git,
 			gui.State.Submodules,
@@ -629,7 +638,7 @@ func (gui *Gui) RunAndHandleError() error {
 
 			switch err {
 			case gocui.ErrQuit:
-				if !gui.State.RetainOriginalDir {
+				if !gui.RetainOriginalDir {
 					if err := gui.recordCurrentDirectory(); err != nil {
 						return err
 					}

@@ -34,7 +34,7 @@ func (gui *Gui) submodulesRenderToMain() error {
 		if file == nil {
 			task = NewRenderStringTask(prefix)
 		} else {
-			cmdObj := gui.Git.WorkingTree.WorktreeFileDiffCmdObj(file, false, !file.HasUnstagedChanges && file.HasStagedChanges, gui.State.IgnoreWhitespaceInDiffView)
+			cmdObj := gui.Git.WorkingTree.WorktreeFileDiffCmdObj(file, false, !file.HasUnstagedChanges && file.HasStagedChanges, gui.IgnoreWhitespaceInDiffView)
 			task = NewRunCommandTaskWithPrefix(cmdObj.GetCmd(), prefix)
 		}
 	}

@@ -26,7 +26,7 @@ type SubmodulesController struct {
 	// case I would actually prefer a _zero_ letter variable name in the form of
 	// struct embedding, but Go does not allow hiding public fields in an embedded struct
 	// to the client
-	c                    ControllerCommon
+	c                    *ControllerCommon
 	enterSubmoduleFn     func(submodule *models.SubmoduleConfig) error
 	getSelectedSubmodule func() *models.SubmoduleConfig
 	git                  *commands.GitCommand
@@ -34,7 +34,7 @@ type SubmodulesController struct {
 }
 
 func NewSubmodulesController(
-	c ControllerCommon,
+	c *ControllerCommon,
 	enterSubmoduleFn func(submodule *models.SubmoduleConfig) error,
 	git *commands.GitCommand,
 	submodules []*models.SubmoduleConfig,

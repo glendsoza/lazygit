@@ -59,7 +59,7 @@ func (gui *Gui) filesRenderToMain() error {
 		return gui.renderConflictsFromFilesPanel()
 	}
 
-	cmdObj := gui.Git.WorkingTree.WorktreeFileDiffCmdObj(node, false, !node.GetHasUnstagedChanges() && node.GetHasStagedChanges(), gui.State.IgnoreWhitespaceInDiffView)
+	cmdObj := gui.Git.WorkingTree.WorktreeFileDiffCmdObj(node, false, !node.GetHasUnstagedChanges() && node.GetHasStagedChanges(), gui.IgnoreWhitespaceInDiffView)
 
 	refreshOpts := refreshMainOpts{main: &viewUpdateOpts{
 		title: gui.Tr.UnstagedChanges,
@@ -68,7 +68,7 @@ func (gui *Gui) filesRenderToMain() error {
 
 	if node.GetHasUnstagedChanges() {
 		if node.GetHasStagedChanges() {
-			cmdObj := gui.Git.WorkingTree.WorktreeFileDiffCmdObj(node, false, true, gui.State.IgnoreWhitespaceInDiffView)
+			cmdObj := gui.Git.WorkingTree.WorktreeFileDiffCmdObj(node, false, true, gui.IgnoreWhitespaceInDiffView)
 
 			refreshOpts.secondary = &viewUpdateOpts{
 				title: gui.Tr.StagedChanges,
