@@ -11,7 +11,7 @@ import (
 
 func (gui *Gui) exitDiffMode() error {
 	gui.State.Modes.Diffing = diffing.New()
-	return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+	return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 }
 
 func (gui *Gui) renderDiff() error {
@@ -116,7 +116,7 @@ func (gui *Gui) handleCreateDiffingMenuPanel() error {
 				OnPress: func() error {
 					gui.State.Modes.Diffing.Ref = name
 					// can scope this down based on current view but too lazy right now
-					return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+					return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 				},
 			},
 		}...)
@@ -131,7 +131,7 @@ func (gui *Gui) handleCreateDiffingMenuPanel() error {
 					FindSuggestionsFunc: gui.getRefsSuggestionsFunc(),
 					HandleConfirm: func(response string) error {
 						gui.State.Modes.Diffing.Ref = strings.TrimSpace(response)
-						return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+						return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 					},
 				})
 			},
@@ -144,14 +144,14 @@ func (gui *Gui) handleCreateDiffingMenuPanel() error {
 				DisplayString: gui.Tr.LcSwapDiff,
 				OnPress: func() error {
 					gui.State.Modes.Diffing.Reverse = !gui.State.Modes.Diffing.Reverse
-					return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+					return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 				},
 			},
 			{
 				DisplayString: gui.Tr.LcExitDiffMode,
 				OnPress: func() error {
 					gui.State.Modes.Diffing = diffing.New()
-					return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+					return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 				},
 			},
 		}...)

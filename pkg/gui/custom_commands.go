@@ -260,7 +260,7 @@ func (gui *Gui) handleCustomCommandKeybinding(customCommand config.CustomCommand
 				if err != nil {
 					return gui.PopupHandler.Error(err)
 				}
-				return gui.refreshSidePanels(types.RefreshOptions{})
+				return gui.Refresh(types.RefreshOptions{})
 			})
 		}
 

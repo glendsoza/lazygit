@@ -121,7 +121,7 @@ func (gui *Gui) handleStashDrop() error {
 }
 
 func (gui *Gui) postStashRefresh() error {
-	return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.STASH, types.FILES}})
+	return gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.STASH, types.FILES}})
 }
 
 func (gui *Gui) handleStashSave(stashFunc func(message string) error) error {
@@ -135,7 +135,7 @@ func (gui *Gui) handleStashSave(stashFunc func(message string) error) error {
 			if err := stashFunc(stashComment); err != nil {
 				return gui.PopupHandler.Error(err)
 			}
-			return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.STASH, types.FILES}})
+			return gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.STASH, types.FILES}})
 		},
 	})
 }

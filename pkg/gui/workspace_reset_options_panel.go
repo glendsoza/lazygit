@@ -28,7 +28,7 @@ func (gui *Gui) handleCreateResetMenu() error {
 					return gui.PopupHandler.Error(err)
 				}
 
-				return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
+				return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
 			},
 		},
 		{
@@ -42,7 +42,7 @@ func (gui *Gui) handleCreateResetMenu() error {
 					return gui.PopupHandler.Error(err)
 				}
 
-				return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
+				return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
 			},
 		},
 		{
@@ -56,7 +56,7 @@ func (gui *Gui) handleCreateResetMenu() error {
 					return gui.PopupHandler.Error(err)
 				}
 
-				return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
+				return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
 			},
 		},
 		{
@@ -70,7 +70,7 @@ func (gui *Gui) handleCreateResetMenu() error {
 					return gui.PopupHandler.Error(err)
 				}
 
-				return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
+				return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
 			},
 		},
 		{
@@ -84,7 +84,7 @@ func (gui *Gui) handleCreateResetMenu() error {
 					return gui.PopupHandler.Error(err)
 				}
 
-				return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
+				return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
 			},
 		},
 		{
@@ -98,7 +98,7 @@ func (gui *Gui) handleCreateResetMenu() error {
 					return gui.PopupHandler.Error(err)
 				}
 
-				return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
+				return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
 			},
 		},
 	}

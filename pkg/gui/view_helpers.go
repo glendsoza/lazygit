@@ -58,7 +58,7 @@ func arrToMap(arr []types.RefreshableView) map[types.RefreshableView]bool {
 	return output
 }
 
-func (gui *Gui) refreshSidePanels(options types.RefreshOptions) error {
+func (gui *Gui) Refresh(options types.RefreshOptions) error {
 	if options.Scope == nil {
 		gui.Log.Infof(
 			"refreshing all scopes in %s mode",

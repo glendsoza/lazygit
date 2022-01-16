@@ -190,7 +190,7 @@ func (gui *Gui) handleHardResetWithAutoStash(commitSha string, options handleHar
 					}
 
 					err := gui.Git.Stash.Pop(0)
-					if err := gui.refreshSidePanels(types.RefreshOptions{}); err != nil {
+					if err := gui.Refresh(types.RefreshOptions{}); err != nil {
 						return err
 					}
 					if err != nil {

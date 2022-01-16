@@ -49,7 +49,7 @@ func (gui *Gui) handleSubmitCredential() error {
 		return err
 	}
 
-	return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+	return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 }
 
 func (gui *Gui) handleCloseCredentialsView() error {

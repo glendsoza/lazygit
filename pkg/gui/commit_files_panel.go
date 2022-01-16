@@ -70,7 +70,7 @@ func (gui *Gui) handleCheckoutCommitFile() error {
 		return gui.PopupHandler.Error(err)
 	}
 
-	return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+	return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 }
 
 func (gui *Gui) handleDiscardOldFileChange() error {
@@ -92,7 +92,7 @@ func (gui *Gui) handleDiscardOldFileChange() error {
 					}
 				}
 
-				return gui.refreshSidePanels(types.RefreshOptions{Mode: types.BLOCK_UI})
+				return gui.Refresh(types.RefreshOptions{Mode: types.BLOCK_UI})
 			})
 		},
 	})

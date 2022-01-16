@@ -184,7 +184,7 @@ func (gui *Gui) handleApplyPatch(reverse bool) error {
 	if err := gui.Git.Patch.PatchManager.ApplyPatches(reverse); err != nil {
 		return gui.PopupHandler.Error(err)
 	}
-	return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+	return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 }
 
 func (gui *Gui) handleResetPatch() error {

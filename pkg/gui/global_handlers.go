@@ -177,7 +177,7 @@ func (gui *Gui) scrollDownConfirmationPanel() error {
 }
 
 func (gui *Gui) handleRefresh() error {
-	return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+	return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 }
 
 func (gui *Gui) handleMouseDownMain() error {
@@ -222,7 +222,7 @@ func (gui *Gui) fetch() (err error) {
 		_ = gui.PopupHandler.ErrorMsg(gui.Tr.PassUnameWrong)
 	}
 
-	_ = gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.COMMITS, types.REMOTES, types.TAGS}, Mode: types.ASYNC})
+	_ = gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.COMMITS, types.REMOTES, types.TAGS}, Mode: types.ASYNC})
 
 	return err
 }
@@ -233,7 +233,7 @@ func (gui *Gui) backgroundFetch() (err error) {
 
 	err = gui.Git.Sync.Fetch(git_commands.FetchOptions{Background: true})
 
-	_ = gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.COMMITS, types.REMOTES, types.TAGS}, Mode: types.ASYNC})
+	_ = gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.COMMITS, types.REMOTES, types.TAGS}, Mode: types.ASYNC})
 
 	return err
 }

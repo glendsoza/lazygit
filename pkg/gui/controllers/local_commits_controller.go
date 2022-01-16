@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"fmt"
+
 	"github.com/jesseduffield/lazygit/pkg/commands"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/config"
@@ -18,7 +20,6 @@ type LocalCommitsController struct {
 	getSelectedLocalCommit          func() *models.Commit
 	getCommits                      func() []*models.Commit
 	getSelectedLocalCommitIdx       func() int
-	handleMidRebaseCommand          func(string) (bool, error)
 	handleGenericMergeCommandResult func(error) error
 	pullFiles                       func() error
 }
@@ -31,7 +32,6 @@ func NewLocalCommitsController(
 	getSelectedLocalCommit func() *models.Commit,
 	getCommits func() []*models.Commit,
 	getSelectedLocalCommitIdx func() int,
-	handleMidRebaseCommand func(string) (bool, error),
 	handleGenericMergeCommandResult func(error) error,
 	pullFiles func() error,
 ) *LocalCommitsController {
@@ -41,7 +41,6 @@ func NewLocalCommitsController(
 		getSelectedLocalCommit:          getSelectedLocalCommit,
 		getCommits:                      getCommits,
 		getSelectedLocalCommitIdx:       getSelectedLocalCommitIdx,
-		handleMidRebaseCommand:          handleMidRebaseCommand,
 		handleGenericMergeCommandResult: handleGenericMergeCommandResult,
 		pullFiles:                       pullFiles,
 	}
@@ -251,4 +250,38 @@ func (self *LocalCommitsController) pick() error {
 func (self *LocalCommitsController) interactiveRebase(action string) error {
 	err := self.git.Rebase.InteractiveRebase(self.getCommits(), self.getSelectedLocalCommitIdx(), action)
 	return self.handleGenericMergeCommandResult(err)
+}
+
+// handleMidRebaseCommand sees if the selected commit is in fact a rebasing
+// commit meaning you are trying to edit the todo file rather than actually
+// begin a rebase. It then updates the todo file with that action
+func (self *LocalCommitsController) handleMidRebaseCommand(action string) (bool, error) {
+	selectedCommit := self.getSelectedLocalCommit()
+	if selectedCommit.Status != "rebasing" {
+		return false, nil
+	}
+
+	// for now we do not support setting 'reword' because it requires an editor
+	// and that means we either unconditionally wait around for the subprocess to ask for
+	// our input or we set a lazygit client as the EDITOR env variable and have it
+	// request us to edit the commit message when prompted.
+	if action == "reword" {
+		return true, self.c.ErrorMsg(self.c.Tr.LcRewordNotSupported)
+	}
+
+	self.c.LogAction("Update rebase TODO")
+	self.c.LogCommand(
+		fmt.Sprintf("Updating rebase action of commit %s to '%s'", selectedCommit.ShortSha(), action),
+		false,
+	)
+
+	if err := self.git.Rebase.EditRebaseTodo(
+		self.getSelectedLocalCommitIdx(), action,
+	); err != nil {
+		return false, self.c.Error(err)
+	}
+
+	return true, self.c.Refresh(types.RefreshOptions{
+		Mode: types.SYNC, Scope: []types.RefreshableView{types.REBASE_COMMITS},
+	})
 }

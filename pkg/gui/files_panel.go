@@ -238,7 +238,7 @@ func (gui *Gui) handleFilePress() error {
 		}
 	}
 
-	if err := gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}}); err != nil {
+	if err := gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}}); err != nil {
 		return err
 	}
 
@@ -272,7 +272,7 @@ func (gui *Gui) handleStageAll() error {
 		_ = gui.PopupHandler.Error(err)
 	}
 
-	if err := gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}}); err != nil {
+	if err := gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}}); err != nil {
 		return err
 	}
 
@@ -319,7 +319,7 @@ func (gui *Gui) handleIgnoreFile() error {
 				if err := gui.Git.WorkingTree.Ignore(node.GetPath()); err != nil {
 					return err
 				}
-				return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}})
+				return gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}})
 			},
 		})
 	}
@@ -334,7 +334,7 @@ func (gui *Gui) handleIgnoreFile() error {
 		return gui.PopupHandler.Error(err)
 	}
 
-	return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}})
+	return gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}})
 }
 
 func (gui *Gui) handleWIPCommitPress() error {
@@ -546,7 +546,7 @@ func (gui *Gui) handleFileOpen() error {
 }
 
 func (gui *Gui) handleRefreshFiles() error {
-	return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}})
+	return gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}})
 }
 
 func (gui *Gui) refreshStateFiles() error {
@@ -759,7 +759,7 @@ func (gui *Gui) push(opts pushOpts) error {
 			}
 			_ = gui.PopupHandler.Error(err)
 		}
-		return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+		return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 	})
 }
 
@@ -1003,7 +1003,7 @@ func (gui *Gui) resetSubmodule(submodule *models.SubmoduleConfig) error {
 			return gui.PopupHandler.Error(err)
 		}
 
-		return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES, types.SUBMODULES}})
+		return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES, types.SUBMODULES}})
 	})
 }
 

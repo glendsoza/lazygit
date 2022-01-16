@@ -24,7 +24,7 @@ func (gui *Gui) withGpgHandling(cmdObj oscommands.ICmdObj, waitingStatus string,
 				return err
 			}
 		}
-		if err := gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC}); err != nil {
+		if err := gui.Refresh(types.RefreshOptions{Mode: types.ASYNC}); err != nil {
 			return err
 		}
 
@@ -47,7 +47,7 @@ func (gui *Gui) RunAndStream(cmdObj oscommands.ICmdObj, waitingStatus string, on
 			if _, err := cmd.Stdout.Write([]byte(fmt.Sprintf("%s\n", style.FgRed.Sprint(err.Error())))); err != nil {
 				gui.Log.Error(err)
 			}
-			_ = gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+			_ = gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 			return gui.PopupHandler.Error(
 				fmt.Errorf(
 					gui.Tr.GitCommandFailed, gui.UserConfig.Keybinding.Universal.ExtrasMenu,
@@ -61,6 +61,6 @@ func (gui *Gui) RunAndStream(cmdObj oscommands.ICmdObj, waitingStatus string, on
 			}
 		}
 
-		return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+		return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 	})
 }

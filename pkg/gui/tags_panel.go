@@ -88,7 +88,7 @@ func (gui *Gui) handleDeleteTag(tag *models.Tag) error {
 			if err := gui.Git.Tag.Delete(tag.Name); err != nil {
 				return gui.PopupHandler.Error(err)
 			}
-			return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.COMMITS, types.TAGS}})
+			return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.COMMITS, types.TAGS}})
 		},
 	})
 }

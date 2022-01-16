@@ -91,7 +91,7 @@ func (gui *Gui) handleAddRemote() error {
 					if err := gui.Git.Remote.AddRemote(remoteName, remoteUrl); err != nil {
 						return err
 					}
-					return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.REMOTES}})
+					return gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.REMOTES}})
 				},
 			})
 		},
@@ -114,7 +114,7 @@ func (gui *Gui) handleRemoveRemote() error {
 				return gui.PopupHandler.Error(err)
 			}
 
-			return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.REMOTES}})
+			return gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.REMOTES}})
 		},
 	})
 }
@@ -164,7 +164,7 @@ func (gui *Gui) handleEditRemote() error {
 					if err := gui.Git.Remote.UpdateRemoteUrl(updatedRemoteName, updatedRemoteUrl); err != nil {
 						return gui.PopupHandler.Error(err)
 					}
-					return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.REMOTES}})
+					return gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.REMOTES}})
 				},
 			})
 		},
@@ -186,6 +186,6 @@ func (gui *Gui) handleFetchRemote() error {
 			_ = gui.PopupHandler.Error(err)
 		}
 
-		return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.REMOTES}})
+		return gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.REMOTES}})
 	})
 }

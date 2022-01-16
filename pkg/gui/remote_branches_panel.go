@@ -65,7 +65,7 @@ func (gui *Gui) handleDeleteRemoteBranch() error {
 					_ = gui.PopupHandler.Error(err)
 				}
 
-				return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.REMOTES}})
+				return gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.REMOTES}})
 			})
 		},
 	})
@@ -97,7 +97,7 @@ func (gui *Gui) handleSetBranchUpstream() error {
 				return gui.PopupHandler.Error(err)
 			}
 
-			return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.REMOTES}})
+			return gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.BRANCHES, types.REMOTES}})
 		},
 	})
 }

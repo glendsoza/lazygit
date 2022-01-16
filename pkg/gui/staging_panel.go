@@ -158,7 +158,7 @@ func (gui *Gui) applySelection(reverse bool, state *LblPanelState) error {
 		state.SetLineSelectMode()
 	}
 
-	if err := gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}}); err != nil {
+	if err := gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}}); err != nil {
 		return err
 	}
 	if err := gui.refreshStagingPanel(false, -1); err != nil {

@@ -22,7 +22,7 @@ func (gui *Gui) resetToRef(ref string, strength string, envVars []string) error 
 		return err
 	}
 
-	if err := gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES, types.BRANCHES, types.REFLOG, types.COMMITS}}); err != nil {
+	if err := gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES, types.BRANCHES, types.REFLOG, types.COMMITS}}); err != nil {
 		return err
 	}
 

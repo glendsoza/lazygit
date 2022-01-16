@@ -21,7 +21,7 @@ func (gui *Gui) handleCreateDiscardMenu() error {
 					if err := gui.Git.WorkingTree.DiscardAllDirChanges(node); err != nil {
 						return gui.PopupHandler.Error(err)
 					}
-					return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
+					return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
 				},
 			},
 		}
@@ -35,7 +35,7 @@ func (gui *Gui) handleCreateDiscardMenu() error {
 						return gui.PopupHandler.Error(err)
 					}
 
-					return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
+					return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
 				},
 			})
 		}
@@ -63,7 +63,7 @@ func (gui *Gui) handleCreateDiscardMenu() error {
 						if err := gui.Git.WorkingTree.DiscardAllFileChanges(file); err != nil {
 							return gui.PopupHandler.Error(err)
 						}
-						return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
+						return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
 					},
 				},
 			}
@@ -77,7 +77,7 @@ func (gui *Gui) handleCreateDiscardMenu() error {
 							return gui.PopupHandler.Error(err)
 						}
 
-						return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
+						return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES}})
 					},
 				})
 			}

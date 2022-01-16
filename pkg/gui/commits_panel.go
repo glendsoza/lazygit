@@ -150,36 +150,6 @@ func (gui *Gui) refreshRebaseCommits() error {
 
 // specific functions
 
-// handleMidRebaseCommand sees if the selected commit is in fact a rebasing
-// commit meaning you are trying to edit the todo file rather than actually
-// begin a rebase. It then updates the todo file with that action
-func (gui *Gui) handleMidRebaseCommand(action string) (bool, error) {
-	selectedCommit := gui.getSelectedLocalCommit()
-	if selectedCommit.Status != "rebasing" {
-		return false, nil
-	}
-
-	// for now we do not support setting 'reword' because it requires an editor
-	// and that means we either unconditionally wait around for the subprocess to ask for
-	// our input or we set a lazygit client as the EDITOR env variable and have it
-	// request us to edit the commit message when prompted.
-	if action == "reword" {
-		return true, gui.PopupHandler.ErrorMsg(gui.Tr.LcRewordNotSupported)
-	}
-
-	gui.LogAction("Update rebase TODO")
-	gui.LogCommand(
-		fmt.Sprintf("Updating rebase action of commit %s to '%s'", selectedCommit.ShortSha(), action),
-		false,
-	)
-
-	if err := gui.Git.Rebase.EditRebaseTodo(gui.State.Panels.Commits.SelectedLineIdx, action); err != nil {
-		return false, gui.PopupHandler.Error(err)
-	}
-
-	return true, gui.refreshSidePanels(types.RefreshOptions{Mode: types.SYNC, Scope: []types.RefreshableView{types.REBASE_COMMITS}})
-}
-
 func (gui *Gui) handleCommitMoveDown() error {
 	index := gui.State.Panels.Commits.SelectedLineIdx
 	selectedCommit := gui.State.Commits[index]
@@ -197,7 +167,7 @@ func (gui *Gui) handleCommitMoveDown() error {
 			return gui.PopupHandler.Error(err)
 		}
 		gui.State.Panels.Commits.SelectedLineIdx++
-		return gui.refreshSidePanels(types.RefreshOptions{
+		return gui.Refresh(types.RefreshOptions{
 			Mode: types.SYNC, Scope: []types.RefreshableView{types.REBASE_COMMITS},
 		})
 	}
@@ -232,7 +202,7 @@ func (gui *Gui) handleCommitMoveUp() error {
 			return gui.PopupHandler.Error(err)
 		}
 		gui.State.Panels.Commits.SelectedLineIdx--
-		return gui.refreshSidePanels(types.RefreshOptions{
+		return gui.Refresh(types.RefreshOptions{
 			Mode: types.SYNC, Scope: []types.RefreshableView{types.REBASE_COMMITS},
 		})
 	}
@@ -302,7 +272,7 @@ func (gui *Gui) createRevertMergeCommitMenu(commit *models.Commit) error {
 
 func (gui *Gui) afterRevertCommit() error {
 	gui.State.Panels.Commits.SelectedLineIdx++
-	return gui.refreshSidePanels(types.RefreshOptions{
+	return gui.Refresh(types.RefreshOptions{
 		Mode: types.BLOCK_UI, Scope: []types.RefreshableView{types.COMMITS, types.BRANCHES},
 	})
 }
@@ -338,7 +308,7 @@ func (gui *Gui) handleCreateFixupCommit() error {
 				return gui.PopupHandler.Error(err)
 			}
 
-			return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+			return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 		},
 	})
 }
@@ -400,7 +370,7 @@ func (gui *Gui) createTagMenu(commitSha string) error {
 
 func (gui *Gui) afterTagCreate() error {
 	gui.State.Panels.Tags.SelectedLineIdx = 0 // Set to the top
-	return gui.refreshSidePanels(types.RefreshOptions{
+	return gui.Refresh(types.RefreshOptions{
 		Mode: types.ASYNC, Scope: []types.RefreshableView{types.COMMITS, types.TAGS},
 	})
 }
@@ -465,7 +435,7 @@ func (gui *Gui) handleOpenSearchForCommitsPanel(string) error {
 	// we usually lazyload these commits but now that we're searching we need to load them now
 	if gui.State.Panels.Commits.LimitCommits {
 		gui.State.Panels.Commits.LimitCommits = false
-		if err := gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.COMMITS}}); err != nil {
+		if err := gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.COMMITS}}); err != nil {
 			return err
 		}
 	}
@@ -477,7 +447,7 @@ func (gui *Gui) handleGotoBottomForCommitsPanel() error {
 	// we usually lazyload these commits but now that we're searching we need to load them now
 	if gui.State.Panels.Commits.LimitCommits {
 		gui.State.Panels.Commits.LimitCommits = false
-		if err := gui.refreshSidePanels(types.RefreshOptions{Mode: types.SYNC, Scope: []types.RefreshableView{types.COMMITS}}); err != nil {
+		if err := gui.Refresh(types.RefreshOptions{Mode: types.SYNC, Scope: []types.RefreshableView{types.COMMITS}}); err != nil {
 			return err
 		}
 	}
@@ -526,7 +496,7 @@ func (gui *Gui) handleOpenLogMenu() error {
 					}
 
 					return gui.PopupHandler.WithWaitingStatus(gui.Tr.LcLoadingCommits, func() error {
-						return gui.refreshSidePanels(types.RefreshOptions{Mode: types.SYNC, Scope: []types.RefreshableView{types.COMMITS}})
+						return gui.Refresh(types.RefreshOptions{Mode: types.SYNC, Scope: []types.RefreshableView{types.COMMITS}})
 					})
 				},
 			},
@@ -568,7 +538,7 @@ func (gui *Gui) handleOpenLogMenu() error {
 						return func() error {
 							gui.UserConfig.Git.Log.Order = value
 							return gui.PopupHandler.WithWaitingStatus(gui.Tr.LcLoadingCommits, func() error {
-								return gui.refreshSidePanels(types.RefreshOptions{Mode: types.SYNC, Scope: []types.RefreshableView{types.COMMITS}})
+								return gui.Refresh(types.RefreshOptions{Mode: types.SYNC, Scope: []types.RefreshableView{types.COMMITS}})
 							})
 						}
 					}

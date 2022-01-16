@@ -135,7 +135,7 @@ func (gui *Gui) handleGitFetch() error {
 		if err := gui.fetch(); err != nil {
 			_ = gui.PopupHandler.Error(err)
 		}
-		return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+		return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 	})
 }
 
@@ -152,7 +152,7 @@ func (gui *Gui) handleForceCheckout() error {
 			if err := gui.Git.Branch.Checkout(branch.Name, git_commands.CheckoutOptions{Force: true}); err != nil {
 				_ = gui.PopupHandler.Error(err)
 			}
-			return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+			return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 		},
 	})
 }
@@ -202,12 +202,12 @@ func (gui *Gui) handleCheckoutRef(ref string, options handleCheckoutRefOptions) 
 
 						onSuccess()
 						if err := gui.Git.Stash.Pop(0); err != nil {
-							if err := gui.refreshSidePanels(types.RefreshOptions{Mode: types.BLOCK_UI}); err != nil {
+							if err := gui.Refresh(types.RefreshOptions{Mode: types.BLOCK_UI}); err != nil {
 								return err
 							}
 							return gui.PopupHandler.Error(err)
 						}
-						return gui.refreshSidePanels(types.RefreshOptions{Mode: types.BLOCK_UI})
+						return gui.Refresh(types.RefreshOptions{Mode: types.BLOCK_UI})
 					},
 				})
 			}
@@ -218,7 +218,7 @@ func (gui *Gui) handleCheckoutRef(ref string, options handleCheckoutRefOptions) 
 		}
 		onSuccess()
 
-		return gui.refreshSidePanels(types.RefreshOptions{Mode: types.BLOCK_UI})
+		return gui.Refresh(types.RefreshOptions{Mode: types.BLOCK_UI})
 	})
 }
 
@@ -262,7 +262,7 @@ func (gui *Gui) createNewBranchWithName(newBranchName string) error {
 	}
 
 	gui.State.Panels.Branches.SelectedLineIdx = 0
-	return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+	return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 }
 
 func (gui *Gui) handleDeleteBranch() error {
@@ -308,7 +308,7 @@ func (gui *Gui) deleteNamedBranch(selectedBranch *models.Branch, force bool) err
 				}
 				return gui.PopupHandler.ErrorMsg(errMessage)
 			}
-			return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.BRANCHES}})
+			return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.BRANCHES}})
 		},
 	})
 }
@@ -409,7 +409,7 @@ func (gui *Gui) handleFastForward() error {
 			if err != nil {
 				_ = gui.PopupHandler.Error(err)
 			}
-			_ = gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.BRANCHES}})
+			_ = gui.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.BRANCHES}})
 		}
 
 		return nil
@@ -524,7 +524,7 @@ func (gui *Gui) handleNewBranchOffCurrentItem() error {
 
 			gui.State.Panels.Branches.SelectedLineIdx = 0
 
-			return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
+			return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 		},
 	})
 }

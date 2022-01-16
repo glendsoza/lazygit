@@ -38,7 +38,7 @@ func (gui *Gui) clearFiltering() error {
 		gui.State.ScreenMode = SCREEN_NORMAL
 	}
 
-	return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.COMMITS}})
+	return gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.COMMITS}})
 }
 
 func (gui *Gui) setFiltering(path string) error {
@@ -51,7 +51,7 @@ func (gui *Gui) setFiltering(path string) error {
 		return err
 	}
 
-	return gui.refreshSidePanels(types.RefreshOptions{Scope: []types.RefreshableView{types.COMMITS}, Then: func() {
+	return gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.COMMITS}, Then: func() {
 		gui.State.Contexts.BranchCommits.GetPanelState().SetSelectedLineIdx(0)
 	}})
 }

@@ -510,7 +510,7 @@ func NewGui(
 	gui.PopupHandler = popup.NewPopupHandler(
 		cmn,
 		gui.createPopupPanel,
-		func() error { return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC}) },
+		func() error { return gui.Refresh(types.RefreshOptions{Mode: types.ASYNC}) },
 		func() error { return gui.closeConfirmationPrompt(false) },
 		gui.createMenu,
 		gui.withWaitingStatus,
@@ -536,7 +536,6 @@ func NewGui(
 			gui.getSelectedLocalCommit,
 			func() []*models.Commit { return gui.State.Commits },
 			func() int { return gui.State.Panels.Commits.SelectedLineIdx },
-			gui.handleMidRebaseCommand,
 			gui.handleGenericMergeCommandResult,
 			gui.handlePullFiles,
 		),
@@ -667,7 +666,7 @@ func (gui *Gui) runSubprocessWithSuspenseAndRefresh(subprocess oscommands.ICmdOb
 		return err
 	}
 
-	if err := gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC}); err != nil {
+	if err := gui.Refresh(types.RefreshOptions{Mode: types.ASYNC}); err != nil {
 		return err
 	}
 
@@ -735,7 +734,7 @@ func (gui *Gui) loadNewRepo() error {
 		return err
 	}
 
-	if err := gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC}); err != nil {
+	if err := gui.Refresh(types.RefreshOptions{Mode: types.ASYNC}); err != nil {
 		return err
 	}
 

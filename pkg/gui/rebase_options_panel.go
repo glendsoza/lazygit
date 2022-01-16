@@ -99,7 +99,7 @@ func isMergeConflictErr(errStr string) bool {
 }
 
 func (gui *Gui) handleGenericMergeCommandResult(result error) error {
-	if err := gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC}); err != nil {
+	if err := gui.Refresh(types.RefreshOptions{Mode: types.ASYNC}); err != nil {
 		return err
 	}
 	if result == nil {

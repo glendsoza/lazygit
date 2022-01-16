@@ -24,7 +24,7 @@ func (self *guiCommon) LogCommand(cmdStr string, isCommandLine bool) {
 }
 
 func (self *guiCommon) Refresh(opts types.RefreshOptions) error {
-	return self.gui.refreshSidePanels(opts)
+	return self.gui.Refresh(opts)
 }
 
 func (self *guiCommon) RunSubprocessAndRefresh(cmdObj oscommands.ICmdObj) error {
