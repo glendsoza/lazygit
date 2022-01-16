@@ -177,7 +177,7 @@ func (gui *Gui) handleMidRebaseCommand(action string) (bool, error) {
 		return false, gui.PopupHandler.Error(err)
 	}
 
-	return true, gui.refreshRebaseCommits()
+	return true, gui.refreshSidePanels(types.RefreshOptions{Mode: types.SYNC, Scope: []types.RefreshableView{types.REBASE_COMMITS}})
 }
 
 func (gui *Gui) handleCommitDelete() error {
@@ -219,7 +219,9 @@ func (gui *Gui) handleCommitMoveDown() error {
 			return gui.PopupHandler.Error(err)
 		}
 		gui.State.Panels.Commits.SelectedLineIdx++
-		return gui.refreshRebaseCommits()
+		return gui.refreshSidePanels(types.RefreshOptions{
+			Mode: types.SYNC, Scope: []types.RefreshableView{types.REBASE_COMMITS},
+		})
 	}
 
 	return gui.PopupHandler.WithWaitingStatus(gui.Tr.MovingStatus, func() error {
@@ -252,7 +254,9 @@ func (gui *Gui) handleCommitMoveUp() error {
 			return gui.PopupHandler.Error(err)
 		}
 		gui.State.Panels.Commits.SelectedLineIdx--
-		return gui.refreshRebaseCommits()
+		return gui.refreshSidePanels(types.RefreshOptions{
+			Mode: types.SYNC, Scope: []types.RefreshableView{types.REBASE_COMMITS},
+		})
 	}
 
 	return gui.PopupHandler.WithWaitingStatus(gui.Tr.MovingStatus, func() error {
@@ -350,7 +354,9 @@ func (gui *Gui) createRevertMergeCommitMenu(commit *models.Commit) error {
 
 func (gui *Gui) afterRevertCommit() error {
 	gui.State.Panels.Commits.SelectedLineIdx++
-	return gui.refreshSidePanels(types.RefreshOptions{Mode: types.BLOCK_UI, Scope: []types.RefreshableView{types.COMMITS, types.BRANCHES}})
+	return gui.refreshSidePanels(types.RefreshOptions{
+		Mode: types.BLOCK_UI, Scope: []types.RefreshableView{types.COMMITS, types.BRANCHES},
+	})
 }
 
 func (gui *Gui) handleViewCommitFiles() error {
@@ -446,7 +452,9 @@ func (gui *Gui) createTagMenu(commitSha string) error {
 
 func (gui *Gui) afterTagCreate() error {
 	gui.State.Panels.Tags.SelectedLineIdx = 0 // Set to the top
-	return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.COMMITS, types.TAGS}})
+	return gui.refreshSidePanels(types.RefreshOptions{
+		Mode: types.ASYNC, Scope: []types.RefreshableView{types.COMMITS, types.TAGS},
+	})
 }
 
 func (gui *Gui) handleCreateAnnotatedTag(commitSha string) error {

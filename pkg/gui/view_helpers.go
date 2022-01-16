@@ -77,69 +77,54 @@ func (gui *Gui) refreshSidePanels(options types.RefreshOptions) error {
 	f := func() {
 		var scopeMap map[types.RefreshableView]bool
 		if len(options.Scope) == 0 {
-			scopeMap = arrToMap([]types.RefreshableView{types.COMMITS, types.BRANCHES, types.FILES, types.STASH, types.REFLOG, types.TAGS, types.REMOTES, types.STATUS})
+			scopeMap = arrToMap([]types.RefreshableView{
+				types.COMMITS,
+				types.BRANCHES,
+				types.FILES,
+				types.STASH,
+				types.REFLOG,
+				types.TAGS,
+				types.REMOTES,
+				types.STATUS,
+			})
 		} else {
 			scopeMap = arrToMap(options.Scope)
 		}
 
-		if scopeMap[types.COMMITS] || scopeMap[types.BRANCHES] || scopeMap[types.REFLOG] {
+		refresh := func(f func()) {
 			wg.Add(1)
 			func() {
 				if options.Mode == types.ASYNC {
-					go utils.Safe(func() { gui.refreshCommits() })
+					go utils.Safe(f)
 				} else {
-					gui.refreshCommits()
+					f()
 				}
 				wg.Done()
 			}()
+		}
+
+		if scopeMap[types.COMMITS] || scopeMap[types.BRANCHES] || scopeMap[types.REFLOG] {
+			refresh(gui.refreshCommits)
+		} else if scopeMap[types.REBASE_COMMITS] {
+			// the above block handles rebase commits so we only need to call this one
+			// if we've asked specifically for rebase commits and not those other things
+			refresh(func() { _ = gui.refreshRebaseCommits() })
 		}
 
 		if scopeMap[types.FILES] || scopeMap[types.SUBMODULES] {
-			wg.Add(1)
-			func() {
-				if options.Mode == types.ASYNC {
-					go utils.Safe(func() { _ = gui.refreshFilesAndSubmodules() })
-				} else {
-					_ = gui.refreshFilesAndSubmodules()
-				}
-				wg.Done()
-			}()
+			refresh(func() { _ = gui.refreshFilesAndSubmodules() })
 		}
 
 		if scopeMap[types.STASH] {
-			wg.Add(1)
-			func() {
-				if options.Mode == types.ASYNC {
-					go utils.Safe(func() { _ = gui.refreshStashEntries() })
-				} else {
-					_ = gui.refreshStashEntries()
-				}
-				wg.Done()
-			}()
+			refresh(func() { _ = gui.refreshStashEntries() })
 		}
 
 		if scopeMap[types.TAGS] {
-			wg.Add(1)
-			func() {
-				if options.Mode == types.ASYNC {
-					go utils.Safe(func() { _ = gui.refreshTags() })
-				} else {
-					_ = gui.refreshTags()
-				}
-				wg.Done()
-			}()
+			refresh(func() { _ = gui.refreshTags() })
 		}
 
 		if scopeMap[types.REMOTES] {
-			wg.Add(1)
-			func() {
-				if options.Mode == types.ASYNC {
-					go utils.Safe(func() { _ = gui.refreshRemotes() })
-				} else {
-					_ = gui.refreshRemotes()
-				}
-				wg.Done()
-			}()
+			refresh(func() { _ = gui.refreshRemotes() })
 		}
 
 		wg.Wait()
