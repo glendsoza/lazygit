@@ -345,6 +345,11 @@ func generateSnapshot(dir string) (string, error) {
 		fmt.Sprintf(`git -C %s status`, dir),                 // file tree
 		fmt.Sprintf(`git -C %s log --pretty=%%B -p -1`, dir), // log
 		fmt.Sprintf(`git -C %s tag -n`, dir),                 // tags
+		// TODO: add git stash list command
+		fmt.Sprintf(`git -C %s submodule foreach 'git status'`, dir),                 // submodule status
+		fmt.Sprintf(`git -C %s submodule foreach 'git log --pretty=%%B -p -1'`, dir), // submodule log
+		fmt.Sprintf(`git -C %s submodule foreach 'git tag -n'`, dir),                 // submodule tags
+		fmt.Sprintf(`git -C %s submodule foreach 'git stash list'`, dir),             // submodule stash
 	}
 
 	for _, cmdStr := range cmdStrs {
