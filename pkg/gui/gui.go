@@ -506,8 +506,6 @@ func NewGui(
 		return nil, err
 	}
 
-	guiCommon := &guiCommon{gui: gui, IPopupHandler: gui.PopupHandler}
-
 	gui.resetState(filterPath, false)
 
 	gui.watchFilesForChanges()
@@ -523,13 +521,14 @@ func NewGui(
 
 	authors.SetCustomAuthors(gui.UserConfig.Gui.AuthorColors)
 
+	guiCommon := &guiCommon{gui: gui, IPopupHandler: gui.PopupHandler}
+
 	gui.Controllers = Controllers{
 		Submodules: controllers.NewSubmodulesController(
 			cmn,
 			guiCommon,
 			gui.enterSubmodule,
 			gui.Git,
-			gui.State.FileManager,
 			gui.State.Submodules,
 			gui.getSelectedSubmodule,
 		),

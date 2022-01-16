@@ -1,0 +1,3 @@
+0000000000000000000000000000000000000000 1e9aba67d0e222cb4cbccbc74b29aef3b58b2a43 CI <CI@example.com> 1642291231 +1100	commit (initial): myfile1
+1e9aba67d0e222cb4cbccbc74b29aef3b58b2a43 52cf0ba30b9bbcbbae0e210c6a932e83324b9ff4 CI <CI@example.com> 1642291231 +1100	commit: myfile2
+52cf0ba30b9bbcbbae0e210c6a932e83324b9ff4 2577c2d25e143587425ed269e84a528778eca867 CI <CI@example.com> 1642291250 +1100	commit: add submodule

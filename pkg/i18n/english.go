@@ -398,7 +398,6 @@ type TranslationSet struct {
 	LcEditSubmoduleUrl                  string
 	LcInitializingSubmoduleStatus       string
 	LcInitSubmodule                     string
-	LcViewResetAndRemoveOptions         string
 	LcSubmoduleUpdate                   string
 	LcUpdatingSubmoduleStatus           string
 	LcBulkInitSubmodules                string
@@ -522,7 +521,6 @@ type Actions struct {
 	InitialiseSubmodule               string
 	BulkInitialiseSubmodules          string
 	BulkUpdateSubmodules              string
-	BulkStashAndResetSubmodules       string
 	BulkDeinitialiseSubmodules        string
 	UpdateSubmodule                   string
 	CreateLightweightTag              string
@@ -951,7 +949,6 @@ func EnglishTranslationSet() TranslationSet {
 		LcEditSubmoduleUrl:                  "update submodule URL",
 		LcInitializingSubmoduleStatus:       "initializing submodule",
 		LcInitSubmodule:                     "initialize submodule",
-		LcViewResetAndRemoveOptions:         "view reset and remove submodule options",
 		LcSubmoduleUpdate:                   "update submodule",
 		LcUpdatingSubmoduleStatus:           "updating submodule",
 		LcBulkInitSubmodules:                "bulk init submodules",
@@ -1073,7 +1070,6 @@ func EnglishTranslationSet() TranslationSet {
 			InitialiseSubmodule:               "Initialise submodule",
 			BulkInitialiseSubmodules:          "Bulk initialise submodules",
 			BulkUpdateSubmodules:              "Bulk update submodules",
-			BulkStashAndResetSubmodules:       "Bulk stash and reset submodules",
 			BulkDeinitialiseSubmodules:        "Bulk deinitialise submodules",
 			UpdateSubmodule:                   "Update submodule",
 			DeleteTag:                         "Delete tag",

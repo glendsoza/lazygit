@@ -50,7 +50,7 @@ func (gui *Gui) handleCreateDiscardMenu() error {
 				{
 					DisplayString: gui.Tr.LcSubmoduleStashAndReset,
 					OnPress: func() error {
-						return gui.Controllers.Submodules.Reset(submodule)
+						return gui.resetSubmodule(submodule)
 					},
 				},
 			}

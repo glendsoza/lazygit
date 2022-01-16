@@ -151,41 +151,39 @@ func RunTests(
 					}
 				}
 
-				if mode != SANDBOX {
-					actualRepo, expectedRepo, err := generateSnapshots(actualRepoDir, expectedRepoDir)
+				actualRepo, expectedRepo, err := generateSnapshots(actualRepoDir, expectedRepoDir)
+				if err != nil {
+					return err
+				}
+
+				actualRemote := "remote folder does not exist"
+				expectedRemote := "remote folder does not exist"
+				if folderExists(expectedRemoteDir) {
+					actualRemote, expectedRemote, err = generateSnapshotsForRemote(actualRemoteDir, expectedRemoteDir)
 					if err != nil {
 						return err
 					}
+				} else if folderExists(actualRemoteDir) {
+					actualRemote = "remote folder exists"
+				}
 
-					actualRemote := "remote folder does not exist"
-					expectedRemote := "remote folder does not exist"
-					if folderExists(expectedRemoteDir) {
-						actualRemote, expectedRemote, err = generateSnapshotsForRemote(actualRemoteDir, expectedRemoteDir)
-						if err != nil {
-							return err
-						}
-					} else if folderExists(actualRemoteDir) {
-						actualRemote = "remote folder exists"
+				if expectedRepo == actualRepo && expectedRemote == actualRemote {
+					logf("%s: success at speed %f\n", test.Name, speed)
+					break
+				}
+
+				// if the snapshots and we haven't tried all playback speeds different we'll retry at a slower speed
+				if i == len(speeds)-1 {
+					// get the log file and print that
+					bytes, err := ioutil.ReadFile(filepath.Join(configDir, "development.log"))
+					if err != nil {
+						return err
 					}
-
-					if expectedRepo == actualRepo && expectedRemote == actualRemote {
-						logf("%s: success at speed %f\n", test.Name, speed)
-						break
-					}
-
-					// if the snapshots and we haven't tried all playback speeds different we'll retry at a slower speed
-					if i == len(speeds)-1 {
-						// get the log file and print that
-						bytes, err := ioutil.ReadFile(filepath.Join(configDir, "development.log"))
-						if err != nil {
-							return err
-						}
-						logf("%s", string(bytes))
-						if expectedRepo != actualRepo {
-							onFail(t, expectedRepo, actualRepo, "repo")
-						} else {
-							onFail(t, expectedRemote, actualRemote, "remote")
-						}
+					logf("%s", string(bytes))
+					if expectedRepo != actualRepo {
+						onFail(t, expectedRepo, actualRepo, "repo")
+					} else {
+						onFail(t, expectedRemote, actualRemote, "remote")
 					}
 				}
 			}

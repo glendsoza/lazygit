@@ -30,7 +30,7 @@ func (gui *Gui) submodulesRenderToMain() error {
 			style.FgCyan.Sprint(submodule.Url),
 		)
 
-		file := gui.Controllers.Submodules.FileForSubmodule(submodule)
+		file := gui.fileForSubmodule(submodule)
 		if file == nil {
 			task = NewRenderStringTask(prefix)
 		} else {

@@ -9,7 +9,6 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/common"
 	"github.com/jesseduffield/lazygit/pkg/config"
-	"github.com/jesseduffield/lazygit/pkg/gui/filetree"
 	"github.com/jesseduffield/lazygit/pkg/gui/popup"
 	"github.com/jesseduffield/lazygit/pkg/gui/style"
 	"github.com/jesseduffield/lazygit/pkg/gui/types"
@@ -21,7 +20,6 @@ type SubmodulesController struct {
 	enterSubmoduleFn     func(submodule *models.SubmoduleConfig) error
 	getSelectedSubmodule func() *models.SubmoduleConfig
 	git                  *commands.GitCommand
-	fileManager          *filetree.FileManager
 	submodules           []*models.SubmoduleConfig
 }
 
@@ -30,7 +28,6 @@ func NewSubmodulesController(
 	guiCommon IGuiCommon,
 	enterSubmoduleFn func(submodule *models.SubmoduleConfig) error,
 	git *commands.GitCommand,
-	fileManager *filetree.FileManager,
 	submodules []*models.SubmoduleConfig,
 	getSelectedSubmodule func() *models.SubmoduleConfig,
 ) *SubmodulesController {
@@ -39,7 +36,6 @@ func NewSubmodulesController(
 		IGuiCommon:           guiCommon,
 		enterSubmoduleFn:     enterSubmoduleFn,
 		git:                  git,
-		fileManager:          fileManager,
 		submodules:           submodules,
 		getSelectedSubmodule: getSelectedSubmodule,
 	}
@@ -54,9 +50,8 @@ func (self *SubmodulesController) Keybindings(getKey func(key string) interface{
 		},
 		{
 			Key:         getKey(config.Universal.Remove),
-			Handler:     self.forSubmodule(self.openResetMenu),
-			Description: self.Tr.LcViewResetAndRemoveOptions,
-			OpensMenu:   true,
+			Handler:     self.forSubmodule(self.remove),
+			Description: self.Tr.LcRemoveSubmodule,
 		},
 		{
 			Key:         getKey(config.Submodules.Update),
@@ -89,12 +84,6 @@ func (self *SubmodulesController) Keybindings(getKey func(key string) interface{
 
 func (self *SubmodulesController) enter(submodule *models.SubmoduleConfig) error {
 	return self.enterSubmoduleFn(submodule)
-}
-
-func (self *SubmodulesController) Reset(submodule *models.SubmoduleConfig) error {
-	return self.WithWaitingStatus(self.Tr.LcResettingSubmoduleStatus, func() error {
-		return self.resetSubmodule(submodule)
-	})
 }
 
 func (self *SubmodulesController) add() error {
@@ -159,26 +148,6 @@ func (self *SubmodulesController) init(submodule *models.SubmoduleConfig) error 
 	})
 }
 
-func (self *SubmodulesController) openResetMenu(submodule *models.SubmoduleConfig) error {
-	return self.Menu(popup.CreateMenuOptions{
-		Title: submodule.Name,
-		Items: []*popup.MenuItem{
-			{
-				DisplayString: self.Tr.LcSubmoduleStashAndReset,
-				OnPress: func() error {
-					return self.resetSubmodule(submodule)
-				},
-			},
-			{
-				DisplayString: self.Tr.LcRemoveSubmodule,
-				OnPress: func() error {
-					return self.removeSubmodule(submodule)
-				},
-			},
-		},
-	})
-}
-
 func (self *SubmodulesController) openBulkActionsMenu() error {
 	return self.Menu(popup.CreateMenuOptions{
 		Title: self.Tr.LcBulkSubmoduleOptions,
@@ -203,19 +172,6 @@ func (self *SubmodulesController) openBulkActionsMenu() error {
 					return self.WithWaitingStatus(self.Tr.LcRunningCommand, func() error {
 						self.LogAction(self.Tr.Actions.BulkUpdateSubmodules)
 						if err := self.git.Submodule.BulkUpdateCmdObj().Run(); err != nil {
-							return self.Error(err)
-						}
-
-						return self.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.SUBMODULES}})
-					})
-				},
-			},
-			{
-				DisplayStrings: []string{self.Tr.LcSubmoduleStashAndReset, style.FgRed.Sprintf("git stash in each submodule && %s", self.git.Submodule.ForceBulkUpdateCmdObj().ToString())},
-				OnPress: func() error {
-					return self.WithWaitingStatus(self.Tr.LcRunningCommand, func() error {
-						self.LogAction(self.Tr.Actions.BulkStashAndResetSubmodules)
-						if err := self.git.Submodule.ResetSubmodules(self.submodules); err != nil {
 							return self.Error(err)
 						}
 
@@ -252,17 +208,7 @@ func (self *SubmodulesController) update(submodule *models.SubmoduleConfig) erro
 	})
 }
 
-func (self *SubmodulesController) FileForSubmodule(submodule *models.SubmoduleConfig) *models.File {
-	for _, file := range self.fileManager.GetAllFiles() {
-		if file.IsSubmodule([]*models.SubmoduleConfig{submodule}) {
-			return file
-		}
-	}
-
-	return nil
-}
-
-func (self *SubmodulesController) removeSubmodule(submodule *models.SubmoduleConfig) error {
+func (self *SubmodulesController) remove(submodule *models.SubmoduleConfig) error {
 	return self.Ask(popup.AskOpts{
 		Title:  self.Tr.RemoveSubmodule,
 		Prompt: fmt.Sprintf(self.Tr.RemoveSubmodulePrompt, submodule.Name),
@@ -275,26 +221,6 @@ func (self *SubmodulesController) removeSubmodule(submodule *models.SubmoduleCon
 			return self.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.SUBMODULES, types.FILES}})
 		},
 	})
-}
-
-func (self *SubmodulesController) resetSubmodule(submodule *models.SubmoduleConfig) error {
-	self.LogAction(self.Tr.Actions.ResetSubmodule)
-
-	file := self.FileForSubmodule(submodule)
-	if file != nil {
-		if err := self.git.WorkingTree.UnStageFile(file.Names(), file.Tracked); err != nil {
-			return self.Error(err)
-		}
-	}
-
-	if err := self.git.Submodule.Stash(submodule); err != nil {
-		return self.Error(err)
-	}
-	if err := self.git.Submodule.Reset(submodule); err != nil {
-		return self.Error(err)
-	}
-
-	return self.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES, types.SUBMODULES}})
 }
 
 func (self *SubmodulesController) forSubmodule(callback func(*models.SubmoduleConfig) error) func() error {

@@ -984,3 +984,35 @@ func (gui *Gui) handleOpenMergeTool() error {
 		},
 	})
 }
+
+func (gui *Gui) resetSubmodule(submodule *models.SubmoduleConfig) error {
+	return gui.PopupHandler.WithWaitingStatus(gui.Tr.LcResettingSubmoduleStatus, func() error {
+		gui.logAction(gui.Tr.Actions.ResetSubmodule)
+
+		file := gui.fileForSubmodule(submodule)
+		if file != nil {
+			if err := gui.Git.WorkingTree.UnStageFile(file.Names(), file.Tracked); err != nil {
+				return gui.PopupHandler.Error(err)
+			}
+		}
+
+		if err := gui.Git.Submodule.Stash(submodule); err != nil {
+			return gui.PopupHandler.Error(err)
+		}
+		if err := gui.Git.Submodule.Reset(submodule); err != nil {
+			return gui.PopupHandler.Error(err)
+		}
+
+		return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.FILES, types.SUBMODULES}})
+	})
+}
+
+func (gui *Gui) fileForSubmodule(submodule *models.SubmoduleConfig) *models.File {
+	for _, file := range gui.State.FileManager.GetAllFiles() {
+		if file.IsSubmodule([]*models.SubmoduleConfig{submodule}) {
+			return file
+		}
+	}
+
+	return nil
+}
