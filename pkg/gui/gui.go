@@ -538,6 +538,7 @@ func NewGui(
 			func() int { return gui.State.Panels.Commits.SelectedLineIdx },
 			gui.handleMidRebaseCommand,
 			gui.handleGenericMergeCommandResult,
+			gui.handlePullFiles,
 		),
 	}
 

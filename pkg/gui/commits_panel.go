@@ -180,28 +180,6 @@ func (gui *Gui) handleMidRebaseCommand(action string) (bool, error) {
 	return true, gui.refreshSidePanels(types.RefreshOptions{Mode: types.SYNC, Scope: []types.RefreshableView{types.REBASE_COMMITS}})
 }
 
-func (gui *Gui) handleCommitDelete() error {
-	applied, err := gui.handleMidRebaseCommand("drop")
-	if err != nil {
-		return err
-	}
-	if applied {
-		return nil
-	}
-
-	return gui.PopupHandler.Ask(popup.AskOpts{
-		Title:  gui.Tr.DeleteCommitTitle,
-		Prompt: gui.Tr.DeleteCommitPrompt,
-		HandleConfirm: func() error {
-			return gui.PopupHandler.WithWaitingStatus(gui.Tr.DeletingStatus, func() error {
-				gui.LogAction(gui.Tr.Actions.DropCommit)
-				err := gui.Git.Rebase.InteractiveRebase(gui.State.Commits, gui.State.Panels.Commits.SelectedLineIdx, "drop")
-				return gui.handleGenericMergeCommandResult(err)
-			})
-		},
-	})
-}
-
 func (gui *Gui) handleCommitMoveDown() error {
 	index := gui.State.Panels.Commits.SelectedLineIdx
 	selectedCommit := gui.State.Commits[index]
@@ -269,22 +247,6 @@ func (gui *Gui) handleCommitMoveUp() error {
 	})
 }
 
-func (gui *Gui) handleCommitEdit() error {
-	applied, err := gui.handleMidRebaseCommand("edit")
-	if err != nil {
-		return err
-	}
-	if applied {
-		return nil
-	}
-
-	return gui.PopupHandler.WithWaitingStatus(gui.Tr.RebasingStatus, func() error {
-		gui.LogAction(gui.Tr.Actions.EditCommit)
-		err = gui.Git.Rebase.InteractiveRebase(gui.State.Commits, gui.State.Panels.Commits.SelectedLineIdx, "edit")
-		return gui.handleGenericMergeCommandResult(err)
-	})
-}
-
 func (gui *Gui) handleCommitAmendTo() error {
 	return gui.PopupHandler.Ask(popup.AskOpts{
 		Title:  gui.Tr.AmendCommitTitle,
@@ -297,20 +259,6 @@ func (gui *Gui) handleCommitAmendTo() error {
 			})
 		},
 	})
-}
-
-func (gui *Gui) handleCommitPick() error {
-	applied, err := gui.handleMidRebaseCommand("pick")
-	if err != nil {
-		return err
-	}
-	if applied {
-		return nil
-	}
-
-	// at this point we aren't actually rebasing so we will interpret this as an
-	// attempt to pull. We might revoke this later after enabling configurable keybindings
-	return gui.handlePullFiles()
 }
 
 func (gui *Gui) handleCommitRevert() error {

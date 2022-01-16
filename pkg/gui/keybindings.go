@@ -741,13 +741,6 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Universal.Remove),
-			Handler:     guards.OutsideFilterMode(gui.handleCommitDelete),
-			Description: gui.Tr.LcDeleteCommit,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.MoveDownCommit),
 			Handler:     guards.OutsideFilterMode(gui.handleCommitMoveDown),
 			Description: gui.Tr.LcMoveDownCommit,
@@ -762,23 +755,9 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Universal.Edit),
-			Handler:     guards.OutsideFilterMode(gui.handleCommitEdit),
-			Description: gui.Tr.LcEditCommit,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.AmendToCommit),
 			Handler:     guards.OutsideFilterMode(gui.handleCommitAmendTo),
 			Description: gui.Tr.LcAmendToCommit,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.PickCommit),
-			Handler:     guards.OutsideFilterMode(gui.handleCommitPick),
-			Description: gui.Tr.LcPickCommit,
 		},
 		{
 			ViewName:    "commits",
