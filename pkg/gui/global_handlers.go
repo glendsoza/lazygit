@@ -215,7 +215,7 @@ func (gui *Gui) fetch() (err error) {
 	gui.Mutexes.FetchMutex.Lock()
 	defer gui.Mutexes.FetchMutex.Unlock()
 
-	gui.logAction("Fetch")
+	gui.LogAction("Fetch")
 	err = gui.Git.Sync.Fetch(git_commands.FetchOptions{})
 
 	if err != nil && strings.Contains(err.Error(), "exit status 128") {
@@ -246,7 +246,7 @@ func (gui *Gui) handleCopySelectedSideContextItemToClipboard() error {
 		return nil
 	}
 
-	gui.logAction(gui.Tr.Actions.CopyToClipboard)
+	gui.LogAction(gui.Tr.Actions.CopyToClipboard)
 	if err := gui.OSCommand.CopyToClipboard(itemId); err != nil {
 		return gui.PopupHandler.Error(err)
 	}

@@ -65,7 +65,7 @@ func (gui *Gui) withSelectedTag(f func(tag *models.Tag) error) func() error {
 // tag-specific handlers
 
 func (gui *Gui) handleCheckoutTag(tag *models.Tag) error {
-	gui.logAction(gui.Tr.Actions.CheckoutTag)
+	gui.LogAction(gui.Tr.Actions.CheckoutTag)
 	if err := gui.handleCheckoutRef(tag.Name, handleCheckoutRefOptions{}); err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (gui *Gui) handleDeleteTag(tag *models.Tag) error {
 		Title:  gui.Tr.DeleteTagTitle,
 		Prompt: prompt,
 		HandleConfirm: func() error {
-			gui.logAction(gui.Tr.Actions.DeleteTag)
+			gui.LogAction(gui.Tr.Actions.DeleteTag)
 			if err := gui.Git.Tag.Delete(tag.Name); err != nil {
 				return gui.PopupHandler.Error(err)
 			}
@@ -107,7 +107,7 @@ func (gui *Gui) handlePushTag(tag *models.Tag) error {
 		FindSuggestionsFunc: gui.getRemoteSuggestionsFunc(),
 		HandleConfirm: func(response string) error {
 			return gui.PopupHandler.WithWaitingStatus(gui.Tr.PushingTagStatus, func() error {
-				gui.logAction(gui.Tr.Actions.PushTag)
+				gui.LogAction(gui.Tr.Actions.PushTag)
 				err := gui.Git.Tag.Push(response, tag.Name)
 				if err != nil {
 					_ = gui.PopupHandler.Error(err)

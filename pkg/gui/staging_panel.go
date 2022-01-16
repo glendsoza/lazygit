@@ -148,7 +148,7 @@ func (gui *Gui) applySelection(reverse bool, state *LblPanelState) error {
 	if !reverse || state.SecondaryFocused {
 		applyFlags = append(applyFlags, "cached")
 	}
-	gui.logAction(gui.Tr.Actions.ApplyPatch)
+	gui.LogAction(gui.Tr.Actions.ApplyPatch)
 	err := gui.Git.WorkingTree.ApplyPatch(patch, applyFlags...)
 	if err != nil {
 		return gui.PopupHandler.Error(err)

@@ -66,7 +66,7 @@ func (gui *Gui) handlePopFileSnapshot() error {
 	if gitFile == nil {
 		return nil
 	}
-	gui.logAction("Restoring file to previous state")
+	gui.LogAction("Restoring file to previous state")
 	gui.logCommand("Undoing last conflict resolution", false)
 	if err := ioutil.WriteFile(gitFile.Name, []byte(prevContent), 0644); err != nil {
 		return err
@@ -145,7 +145,7 @@ func (gui *Gui) resolveConflict(selection mergeconflicts.Selection) (bool, error
 	case mergeconflicts.ALL:
 		logStr = "Picking all hunks"
 	}
-	gui.logAction("Resolve merge conflict")
+	gui.LogAction("Resolve merge conflict")
 	gui.logCommand(logStr, false)
 	return true, ioutil.WriteFile(gitFile.Name, []byte(output), 0644)
 }

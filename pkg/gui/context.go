@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jesseduffield/gocui"
+	"github.com/jesseduffield/lazygit/pkg/gui/controllers"
 )
 
 type ContextKind int
@@ -23,6 +24,8 @@ type OnFocusOpts struct {
 }
 
 type Context interface {
+	controllers.IController
+
 	HandleFocus(opts ...OnFocusOpts) error
 	HandleFocusLost() error
 	HandleRender() error

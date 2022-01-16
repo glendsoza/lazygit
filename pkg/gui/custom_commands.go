@@ -255,7 +255,7 @@ func (gui *Gui) handleCustomCommandKeybinding(customCommand config.CustomCommand
 				loadingText = gui.Tr.LcRunningCustomCommandStatus
 			}
 			return gui.PopupHandler.WithWaitingStatus(loadingText, func() error {
-				gui.logAction(gui.Tr.Actions.CustomCommand)
+				gui.LogAction(gui.Tr.Actions.CustomCommand)
 				err := gui.OSCommand.Cmd.NewShell(cmdStr).Run()
 				if err != nil {
 					return gui.PopupHandler.Error(err)

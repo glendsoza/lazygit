@@ -22,7 +22,7 @@ import (
 // So we call logAction to log the 'Stage File' part and then we call logCommand to log the command itself.
 // We pass logCommand to our OSCommand struct so that it can handle logging commands
 // for us.
-func (gui *Gui) logAction(action string) {
+func (gui *Gui) LogAction(action string) {
 	if gui.Views.Extras == nil {
 		return
 	}

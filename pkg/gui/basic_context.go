@@ -1,5 +1,27 @@
 package gui
 
+import (
+	"github.com/jesseduffield/lazygit/pkg/config"
+	"github.com/jesseduffield/lazygit/pkg/gui/controllers"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
+)
+
+type NullController struct{}
+
+var _ controllers.IController = &NullController{}
+
+func (c *NullController) Keybindings(
+	getKey func(key string) interface{},
+	config config.KeybindingConfig,
+	guards types.KeybindingGuards,
+) []*types.Binding {
+	return nil
+}
+
+func NewNullController() *NullController {
+	return &NullController{}
+}
+
 type BasicContext struct {
 	OnFocus     func(opts ...OnFocusOpts) error
 	OnFocusLost func() error
@@ -15,6 +37,8 @@ type BasicContext struct {
 	ParentContext Context
 	// we can't know on the calling end whether a Context is actually a nil value without reflection, so we're storing this flag here to tell us. There has got to be a better way around this
 	hasParent bool
+
+	controllers.IController
 }
 
 func (self *BasicContext) GetOptionsMap() map[string]string {

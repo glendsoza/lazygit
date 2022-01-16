@@ -65,7 +65,7 @@ func (gui *Gui) handleCheckoutCommitFile() error {
 		return nil
 	}
 
-	gui.logAction(gui.Tr.Actions.CheckoutFile)
+	gui.LogAction(gui.Tr.Actions.CheckoutFile)
 	if err := gui.Git.WorkingTree.CheckoutFile(gui.State.CommitFileManager.GetParent(), node.GetPath()); err != nil {
 		return gui.PopupHandler.Error(err)
 	}
@@ -85,7 +85,7 @@ func (gui *Gui) handleDiscardOldFileChange() error {
 		Prompt: gui.Tr.DiscardFileChangesPrompt,
 		HandleConfirm: func() error {
 			return gui.PopupHandler.WithWaitingStatus(gui.Tr.RebasingStatus, func() error {
-				gui.logAction(gui.Tr.Actions.DiscardOldFileChange)
+				gui.LogAction(gui.Tr.Actions.DiscardOldFileChange)
 				if err := gui.Git.Rebase.DiscardOldFileChanges(gui.State.Commits, gui.State.Panels.Commits.SelectedLineIdx, fileName); err != nil {
 					if err := gui.handleGenericMergeCommandResult(err); err != nil {
 						return err

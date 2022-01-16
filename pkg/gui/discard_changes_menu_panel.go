@@ -17,7 +17,7 @@ func (gui *Gui) handleCreateDiscardMenu() error {
 			{
 				DisplayString: gui.Tr.LcDiscardAllChanges,
 				OnPress: func() error {
-					gui.logAction(gui.Tr.Actions.DiscardAllChangesInDirectory)
+					gui.LogAction(gui.Tr.Actions.DiscardAllChangesInDirectory)
 					if err := gui.Git.WorkingTree.DiscardAllDirChanges(node); err != nil {
 						return gui.PopupHandler.Error(err)
 					}
@@ -30,7 +30,7 @@ func (gui *Gui) handleCreateDiscardMenu() error {
 			menuItems = append(menuItems, &popup.MenuItem{
 				DisplayString: gui.Tr.LcDiscardUnstagedChanges,
 				OnPress: func() error {
-					gui.logAction(gui.Tr.Actions.DiscardUnstagedChangesInDirectory)
+					gui.LogAction(gui.Tr.Actions.DiscardUnstagedChangesInDirectory)
 					if err := gui.Git.WorkingTree.DiscardUnstagedDirChanges(node); err != nil {
 						return gui.PopupHandler.Error(err)
 					}
@@ -59,7 +59,7 @@ func (gui *Gui) handleCreateDiscardMenu() error {
 				{
 					DisplayString: gui.Tr.LcDiscardAllChanges,
 					OnPress: func() error {
-						gui.logAction(gui.Tr.Actions.DiscardAllChangesInFile)
+						gui.LogAction(gui.Tr.Actions.DiscardAllChangesInFile)
 						if err := gui.Git.WorkingTree.DiscardAllFileChanges(file); err != nil {
 							return gui.PopupHandler.Error(err)
 						}
@@ -72,7 +72,7 @@ func (gui *Gui) handleCreateDiscardMenu() error {
 				menuItems = append(menuItems, &popup.MenuItem{
 					DisplayString: gui.Tr.LcDiscardUnstagedChanges,
 					OnPress: func() error {
-						gui.logAction(gui.Tr.Actions.DiscardAllUnstagedChangesInFile)
+						gui.LogAction(gui.Tr.Actions.DiscardAllUnstagedChangesInFile)
 						if err := gui.Git.WorkingTree.DiscardUnstagedFileChanges(file); err != nil {
 							return gui.PopupHandler.Error(err)
 						}

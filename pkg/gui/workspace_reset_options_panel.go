@@ -23,7 +23,7 @@ func (gui *Gui) handleCreateResetMenu() error {
 				red.Sprint(nukeStr),
 			},
 			OnPress: func() error {
-				gui.logAction(gui.Tr.Actions.NukeWorkingTree)
+				gui.LogAction(gui.Tr.Actions.NukeWorkingTree)
 				if err := gui.Git.WorkingTree.ResetAndClean(); err != nil {
 					return gui.PopupHandler.Error(err)
 				}
@@ -37,7 +37,7 @@ func (gui *Gui) handleCreateResetMenu() error {
 				red.Sprint("git checkout -- ."),
 			},
 			OnPress: func() error {
-				gui.logAction(gui.Tr.Actions.DiscardUnstagedFileChanges)
+				gui.LogAction(gui.Tr.Actions.DiscardUnstagedFileChanges)
 				if err := gui.Git.WorkingTree.DiscardAnyUnstagedFileChanges(); err != nil {
 					return gui.PopupHandler.Error(err)
 				}
@@ -51,7 +51,7 @@ func (gui *Gui) handleCreateResetMenu() error {
 				red.Sprint("git clean -fd"),
 			},
 			OnPress: func() error {
-				gui.logAction(gui.Tr.Actions.RemoveUntrackedFiles)
+				gui.LogAction(gui.Tr.Actions.RemoveUntrackedFiles)
 				if err := gui.Git.WorkingTree.RemoveUntrackedFiles(); err != nil {
 					return gui.PopupHandler.Error(err)
 				}
@@ -65,7 +65,7 @@ func (gui *Gui) handleCreateResetMenu() error {
 				red.Sprint("git reset --soft HEAD"),
 			},
 			OnPress: func() error {
-				gui.logAction(gui.Tr.Actions.SoftReset)
+				gui.LogAction(gui.Tr.Actions.SoftReset)
 				if err := gui.Git.WorkingTree.ResetSoft("HEAD"); err != nil {
 					return gui.PopupHandler.Error(err)
 				}
@@ -79,7 +79,7 @@ func (gui *Gui) handleCreateResetMenu() error {
 				red.Sprint("git reset --mixed HEAD"),
 			},
 			OnPress: func() error {
-				gui.logAction(gui.Tr.Actions.MixedReset)
+				gui.LogAction(gui.Tr.Actions.MixedReset)
 				if err := gui.Git.WorkingTree.ResetMixed("HEAD"); err != nil {
 					return gui.PopupHandler.Error(err)
 				}
@@ -93,7 +93,7 @@ func (gui *Gui) handleCreateResetMenu() error {
 				red.Sprint("git reset --hard HEAD"),
 			},
 			OnPress: func() error {
-				gui.logAction(gui.Tr.Actions.HardReset)
+				gui.LogAction(gui.Tr.Actions.HardReset)
 				if err := gui.Git.WorkingTree.ResetHard("HEAD"); err != nil {
 					return gui.PopupHandler.Error(err)
 				}

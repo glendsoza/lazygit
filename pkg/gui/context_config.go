@@ -114,6 +114,7 @@ func (gui *Gui) contextTree() ContextTree {
 			Kind:           SIDE_CONTEXT,
 			ViewName:       "status",
 			Key:            STATUS_CONTEXT_KEY,
+			IController:    NewNullController(),
 		},
 		Files:          gui.filesListContext(),
 		Submodules:     gui.submodulesListContext(),
@@ -131,9 +132,10 @@ func (gui *Gui) contextTree() ContextTree {
 			OnFocus: func(opts ...OnFocusOpts) error {
 				return nil // TODO: should we do something here? We should allow for scrolling the panel
 			},
-			Kind:     MAIN_CONTEXT,
-			ViewName: "main",
-			Key:      MAIN_NORMAL_CONTEXT_KEY,
+			Kind:        MAIN_CONTEXT,
+			ViewName:    "main",
+			Key:         MAIN_NORMAL_CONTEXT_KEY,
+			IController: NewNullController(),
 		},
 		Staging: &BasicContext{
 			OnFocus: func(opts ...OnFocusOpts) error {
@@ -149,9 +151,10 @@ func (gui *Gui) contextTree() ContextTree {
 				}
 				return gui.onStagingFocus(forceSecondaryFocused, selectedLineIdx)
 			},
-			Kind:     MAIN_CONTEXT,
-			ViewName: "main",
-			Key:      MAIN_STAGING_CONTEXT_KEY,
+			Kind:        MAIN_CONTEXT,
+			ViewName:    "main",
+			Key:         MAIN_STAGING_CONTEXT_KEY,
+			IController: NewNullController(),
 		},
 		PatchBuilding: &BasicContext{
 			OnFocus: func(opts ...OnFocusOpts) error {
@@ -162,9 +165,10 @@ func (gui *Gui) contextTree() ContextTree {
 
 				return gui.onPatchBuildingFocus(selectedLineIdx)
 			},
-			Kind:     MAIN_CONTEXT,
-			ViewName: "main",
-			Key:      MAIN_PATCH_BUILDING_CONTEXT_KEY,
+			Kind:        MAIN_CONTEXT,
+			ViewName:    "main",
+			Key:         MAIN_PATCH_BUILDING_CONTEXT_KEY,
+			IController: NewNullController(),
 		},
 		Merging: &BasicContext{
 			OnFocus:         OnFocusWrapper(gui.refreshMergePanelWithLock),
@@ -172,30 +176,35 @@ func (gui *Gui) contextTree() ContextTree {
 			ViewName:        "main",
 			Key:             MAIN_MERGING_CONTEXT_KEY,
 			OnGetOptionsMap: gui.getMergingOptions,
+			IController:     NewNullController(),
 		},
 		Credentials: &BasicContext{
-			OnFocus:  OnFocusWrapper(gui.handleAskFocused),
-			Kind:     PERSISTENT_POPUP,
-			ViewName: "credentials",
-			Key:      CREDENTIALS_CONTEXT_KEY,
+			OnFocus:     OnFocusWrapper(gui.handleAskFocused),
+			Kind:        PERSISTENT_POPUP,
+			ViewName:    "credentials",
+			Key:         CREDENTIALS_CONTEXT_KEY,
+			IController: NewNullController(),
 		},
 		Confirmation: &BasicContext{
-			OnFocus:  OnFocusWrapper(gui.handleAskFocused),
-			Kind:     TEMPORARY_POPUP,
-			ViewName: "confirmation",
-			Key:      CONFIRMATION_CONTEXT_KEY,
+			OnFocus:     OnFocusWrapper(gui.handleAskFocused),
+			Kind:        TEMPORARY_POPUP,
+			ViewName:    "confirmation",
+			Key:         CONFIRMATION_CONTEXT_KEY,
+			IController: NewNullController(),
 		},
 		Suggestions: gui.suggestionsListContext(),
 		CommitMessage: &BasicContext{
-			OnFocus:  OnFocusWrapper(gui.handleCommitMessageFocused),
-			Kind:     PERSISTENT_POPUP,
-			ViewName: "commitMessage",
-			Key:      COMMIT_MESSAGE_CONTEXT_KEY,
+			OnFocus:     OnFocusWrapper(gui.handleCommitMessageFocused),
+			Kind:        PERSISTENT_POPUP,
+			ViewName:    "commitMessage",
+			Key:         COMMIT_MESSAGE_CONTEXT_KEY,
+			IController: NewNullController(),
 		},
 		Search: &BasicContext{
-			Kind:     PERSISTENT_POPUP,
-			ViewName: "search",
-			Key:      SEARCH_CONTEXT_KEY,
+			Kind:        PERSISTENT_POPUP,
+			ViewName:    "search",
+			Key:         SEARCH_CONTEXT_KEY,
+			IController: NewNullController(),
 		},
 		CommandLog: &BasicContext{
 			Kind:            EXTRAS_CONTEXT,
@@ -206,6 +215,7 @@ func (gui *Gui) contextTree() ContextTree {
 				gui.Views.Extras.Autoscroll = true
 				return nil
 			},
+			IController: NewNullController(),
 		},
 	}
 }

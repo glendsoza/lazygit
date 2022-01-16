@@ -24,7 +24,7 @@ func (gui *Gui) handleCreateGitFlowMenu() error {
 			return gui.PopupHandler.Prompt(popup.PromptOpts{
 				Title: title,
 				HandleConfirm: func(name string) error {
-					gui.logAction(gui.Tr.Actions.GitFlowStart)
+					gui.LogAction(gui.Tr.Actions.GitFlowStart)
 					return gui.runSubprocessWithSuspenseAndRefresh(
 						gui.Git.Flow.StartCmdObj(branchType, name),
 					)
@@ -69,6 +69,6 @@ func (gui *Gui) gitFlowFinishBranch(branchName string) error {
 		return gui.PopupHandler.Error(err)
 	}
 
-	gui.logAction(gui.Tr.Actions.GitFlowFinish)
+	gui.LogAction(gui.Tr.Actions.GitFlowFinish)
 	return gui.runSubprocessWithSuspenseAndRefresh(cmdObj)
 }

@@ -7,49 +7,39 @@ import (
 
 	"github.com/jesseduffield/lazygit/pkg/commands"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
-	"github.com/jesseduffield/lazygit/pkg/common"
 	"github.com/jesseduffield/lazygit/pkg/config"
 	"github.com/jesseduffield/lazygit/pkg/gui/popup"
 	"github.com/jesseduffield/lazygit/pkg/gui/style"
 	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
-// if Go let me do private struct embedding of structs with public fields (which it should)
-// I would just do that. But alas.
-type ControllerCommon struct {
-	*common.Common
-	IGuiCommon
-}
-
 type SubmodulesController struct {
 	// I've said publicly that I'm against single-letter variable names but in this
 	// case I would actually prefer a _zero_ letter variable name in the form of
 	// struct embedding, but Go does not allow hiding public fields in an embedded struct
 	// to the client
-	c                    *ControllerCommon
-	enterSubmoduleFn     func(submodule *models.SubmoduleConfig) error
+	c   *ControllerCommon
+	git *commands.GitCommand
+
+	enterSubmodule       func(submodule *models.SubmoduleConfig) error
 	getSelectedSubmodule func() *models.SubmoduleConfig
-	git                  *commands.GitCommand
-	submodules           []*models.SubmoduleConfig
 }
 
 func NewSubmodulesController(
 	c *ControllerCommon,
-	enterSubmoduleFn func(submodule *models.SubmoduleConfig) error,
 	git *commands.GitCommand,
-	submodules []*models.SubmoduleConfig,
+	enterSubmodule func(submodule *models.SubmoduleConfig) error,
 	getSelectedSubmodule func() *models.SubmoduleConfig,
 ) *SubmodulesController {
 	return &SubmodulesController{
 		c:                    c,
-		enterSubmoduleFn:     enterSubmoduleFn,
 		git:                  git,
-		submodules:           submodules,
+		enterSubmodule:       enterSubmodule,
 		getSelectedSubmodule: getSelectedSubmodule,
 	}
 }
 
-func (self *SubmodulesController) Keybindings(getKey func(key string) interface{}, config config.KeybindingConfig) []*types.Binding {
+func (self *SubmodulesController) Keybindings(getKey func(key string) interface{}, config config.KeybindingConfig, guards types.KeybindingGuards) []*types.Binding {
 	return []*types.Binding{
 		{
 			Key:         getKey(config.Universal.GoInto),
@@ -91,7 +81,7 @@ func (self *SubmodulesController) Keybindings(getKey func(key string) interface{
 }
 
 func (self *SubmodulesController) enter(submodule *models.SubmoduleConfig) error {
-	return self.enterSubmoduleFn(submodule)
+	return self.enterSubmodule(submodule)
 }
 
 func (self *SubmodulesController) add() error {

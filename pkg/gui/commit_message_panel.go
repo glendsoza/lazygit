@@ -16,7 +16,7 @@ func (gui *Gui) handleCommitConfirm() error {
 	}
 
 	cmdObj := gui.Git.Commit.CommitCmdObj(message)
-	gui.logAction(gui.Tr.Actions.Commit)
+	gui.LogAction(gui.Tr.Actions.Commit)
 
 	_ = gui.returnFromContext()
 	return gui.withGpgHandling(cmdObj, gui.Tr.CommittingStatus, func() error {

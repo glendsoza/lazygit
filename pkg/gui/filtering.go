@@ -5,17 +5,27 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
-func (gui *Gui) validateNotInFilterMode() (bool, error) {
+func (gui *Gui) validateNotInFilterMode() bool {
 	if gui.State.Modes.Filtering.Active() {
-		err := gui.PopupHandler.Ask(popup.AskOpts{
+		_ = gui.PopupHandler.Ask(popup.AskOpts{
 			Title:         gui.Tr.MustExitFilterModeTitle,
 			Prompt:        gui.Tr.MustExitFilterModePrompt,
 			HandleConfirm: gui.exitFilterMode,
 		})
 
-		return false, err
+		return false
 	}
-	return true, nil
+	return true
+}
+
+func (gui *Gui) outsideFilterMode(f func() error) func() error {
+	return func() error {
+		if !gui.validateNotInFilterMode() {
+			return nil
+		}
+
+		return f()
+	}
 }
 
 func (gui *Gui) exitFilterMode() error {

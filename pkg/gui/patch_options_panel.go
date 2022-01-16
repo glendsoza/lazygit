@@ -100,7 +100,7 @@ func (gui *Gui) handleDeletePatchFromCommit() error {
 
 	return gui.PopupHandler.WithWaitingStatus(gui.Tr.RebasingStatus, func() error {
 		commitIndex := gui.getPatchCommitIndex()
-		gui.logAction(gui.Tr.Actions.RemovePatchFromCommit)
+		gui.LogAction(gui.Tr.Actions.RemovePatchFromCommit)
 		err := gui.Git.Patch.DeletePatchesFromCommit(gui.State.Commits, commitIndex)
 		return gui.handleGenericMergeCommandResult(err)
 	})
@@ -117,7 +117,7 @@ func (gui *Gui) handleMovePatchToSelectedCommit() error {
 
 	return gui.PopupHandler.WithWaitingStatus(gui.Tr.RebasingStatus, func() error {
 		commitIndex := gui.getPatchCommitIndex()
-		gui.logAction(gui.Tr.Actions.MovePatchToSelectedCommit)
+		gui.LogAction(gui.Tr.Actions.MovePatchToSelectedCommit)
 		err := gui.Git.Patch.MovePatchToSelectedCommit(gui.State.Commits, commitIndex, gui.State.Panels.Commits.SelectedLineIdx)
 		return gui.handleGenericMergeCommandResult(err)
 	})
@@ -135,7 +135,7 @@ func (gui *Gui) handleMovePatchIntoWorkingTree() error {
 	pull := func(stash bool) error {
 		return gui.PopupHandler.WithWaitingStatus(gui.Tr.RebasingStatus, func() error {
 			commitIndex := gui.getPatchCommitIndex()
-			gui.logAction(gui.Tr.Actions.MovePatchIntoIndex)
+			gui.LogAction(gui.Tr.Actions.MovePatchIntoIndex)
 			err := gui.Git.Patch.MovePatchIntoIndex(gui.State.Commits, commitIndex, stash)
 			return gui.handleGenericMergeCommandResult(err)
 		})
@@ -165,7 +165,7 @@ func (gui *Gui) handlePullPatchIntoNewCommit() error {
 
 	return gui.PopupHandler.WithWaitingStatus(gui.Tr.RebasingStatus, func() error {
 		commitIndex := gui.getPatchCommitIndex()
-		gui.logAction(gui.Tr.Actions.MovePatchIntoNewCommit)
+		gui.LogAction(gui.Tr.Actions.MovePatchIntoNewCommit)
 		err := gui.Git.Patch.PullPatchIntoNewCommit(gui.State.Commits, commitIndex)
 		return gui.handleGenericMergeCommandResult(err)
 	})
@@ -180,7 +180,7 @@ func (gui *Gui) handleApplyPatch(reverse bool) error {
 	if reverse {
 		action = "Apply patch in reverse"
 	}
-	gui.logAction(action)
+	gui.LogAction(action)
 	if err := gui.Git.Patch.PatchManager.ApplyPatches(reverse); err != nil {
 		return gui.PopupHandler.Error(err)
 	}

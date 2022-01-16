@@ -87,7 +87,7 @@ func (gui *Gui) handleAddRemote() error {
 			return gui.PopupHandler.Prompt(popup.PromptOpts{
 				Title: gui.Tr.LcNewRemoteUrl,
 				HandleConfirm: func(remoteUrl string) error {
-					gui.logAction(gui.Tr.Actions.AddRemote)
+					gui.LogAction(gui.Tr.Actions.AddRemote)
 					if err := gui.Git.Remote.AddRemote(remoteName, remoteUrl); err != nil {
 						return err
 					}
@@ -109,7 +109,7 @@ func (gui *Gui) handleRemoveRemote() error {
 		Title:  gui.Tr.LcRemoveRemote,
 		Prompt: gui.Tr.LcRemoveRemotePrompt + " '" + remote.Name + "'?",
 		HandleConfirm: func() error {
-			gui.logAction(gui.Tr.Actions.RemoveRemote)
+			gui.LogAction(gui.Tr.Actions.RemoveRemote)
 			if err := gui.Git.Remote.RemoveRemote(remote.Name); err != nil {
 				return gui.PopupHandler.Error(err)
 			}
@@ -137,7 +137,7 @@ func (gui *Gui) handleEditRemote() error {
 		InitialContent: remote.Name,
 		HandleConfirm: func(updatedRemoteName string) error {
 			if updatedRemoteName != remote.Name {
-				gui.logAction(gui.Tr.Actions.UpdateRemote)
+				gui.LogAction(gui.Tr.Actions.UpdateRemote)
 				if err := gui.Git.Remote.RenameRemote(remote.Name, updatedRemoteName); err != nil {
 					return gui.PopupHandler.Error(err)
 				}
@@ -160,7 +160,7 @@ func (gui *Gui) handleEditRemote() error {
 				Title:          editUrlMessage,
 				InitialContent: url,
 				HandleConfirm: func(updatedRemoteUrl string) error {
-					gui.logAction(gui.Tr.Actions.UpdateRemote)
+					gui.LogAction(gui.Tr.Actions.UpdateRemote)
 					if err := gui.Git.Remote.UpdateRemoteUrl(updatedRemoteName, updatedRemoteUrl); err != nil {
 						return gui.PopupHandler.Error(err)
 					}

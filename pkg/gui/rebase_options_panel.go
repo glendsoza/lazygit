@@ -53,7 +53,7 @@ func (gui *Gui) genericMergeCommand(command string) error {
 		return gui.PopupHandler.ErrorMsg(gui.Tr.NotMergingOrRebasing)
 	}
 
-	gui.logAction(fmt.Sprintf("Merge/Rebase: %s", command))
+	gui.LogAction(fmt.Sprintf("Merge/Rebase: %s", command))
 
 	commandType := ""
 	switch status {

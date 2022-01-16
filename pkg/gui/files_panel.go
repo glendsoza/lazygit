@@ -207,12 +207,12 @@ func (gui *Gui) handleFilePress() error {
 		}
 
 		if file.HasUnstagedChanges {
-			gui.logAction(gui.Tr.Actions.StageFile)
+			gui.LogAction(gui.Tr.Actions.StageFile)
 			if err := gui.Git.WorkingTree.StageFile(file.Name); err != nil {
 				return gui.PopupHandler.Error(err)
 			}
 		} else {
-			gui.logAction(gui.Tr.Actions.UnstageFile)
+			gui.LogAction(gui.Tr.Actions.UnstageFile)
 			if err := gui.Git.WorkingTree.UnStageFile(file.Names(), file.Tracked); err != nil {
 				return gui.PopupHandler.Error(err)
 			}
@@ -225,13 +225,13 @@ func (gui *Gui) handleFilePress() error {
 		}
 
 		if node.GetHasUnstagedChanges() {
-			gui.logAction(gui.Tr.Actions.StageFile)
+			gui.LogAction(gui.Tr.Actions.StageFile)
 			if err := gui.Git.WorkingTree.StageFile(node.Path); err != nil {
 				return gui.PopupHandler.Error(err)
 			}
 		} else {
 			// pretty sure it doesn't matter that we're always passing true here
-			gui.logAction(gui.Tr.Actions.UnstageFile)
+			gui.LogAction(gui.Tr.Actions.UnstageFile)
 			if err := gui.Git.WorkingTree.UnStageFile([]string{node.Path}, true); err != nil {
 				return gui.PopupHandler.Error(err)
 			}
@@ -262,10 +262,10 @@ func (gui *Gui) onFocusFile() error {
 func (gui *Gui) handleStageAll() error {
 	var err error
 	if gui.allFilesStaged() {
-		gui.logAction(gui.Tr.Actions.UnstageAllFiles)
+		gui.LogAction(gui.Tr.Actions.UnstageAllFiles)
 		err = gui.Git.WorkingTree.UnstageAll()
 	} else {
-		gui.logAction(gui.Tr.Actions.StageAllFiles)
+		gui.LogAction(gui.Tr.Actions.StageAllFiles)
 		err = gui.Git.WorkingTree.StageAll()
 	}
 	if err != nil {
@@ -306,7 +306,7 @@ func (gui *Gui) handleIgnoreFile() error {
 			Title:  gui.Tr.IgnoreTracked,
 			Prompt: gui.Tr.IgnoreTrackedPrompt,
 			HandleConfirm: func() error {
-				gui.logAction(gui.Tr.Actions.IgnoreFile)
+				gui.LogAction(gui.Tr.Actions.IgnoreFile)
 				// not 100% sure if this is necessary but I'll assume it is
 				if err := unstageFiles(); err != nil {
 					return err
@@ -324,7 +324,7 @@ func (gui *Gui) handleIgnoreFile() error {
 		})
 	}
 
-	gui.logAction(gui.Tr.Actions.IgnoreFile)
+	gui.LogAction(gui.Tr.Actions.IgnoreFile)
 
 	if err := unstageFiles(); err != nil {
 		return err
@@ -363,7 +363,7 @@ func (gui *Gui) commitPrefixConfigForRepo() *config.CommitPrefixConfig {
 func (gui *Gui) prepareFilesForCommit() error {
 	noStagedFiles := len(gui.stagedFiles()) == 0
 	if noStagedFiles && gui.UserConfig.Gui.SkipNoStagedFilesWarning {
-		gui.logAction(gui.Tr.Actions.StageAllFiles)
+		gui.LogAction(gui.Tr.Actions.StageAllFiles)
 		err := gui.Git.WorkingTree.StageAll()
 		if err != nil {
 			return err
@@ -421,7 +421,7 @@ func (gui *Gui) promptToStageAllAndRetry(retry func() error) error {
 		Title:  gui.Tr.NoFilesStagedTitle,
 		Prompt: gui.Tr.NoFilesStagedPrompt,
 		HandleConfirm: func() error {
-			gui.logAction(gui.Tr.Actions.StageAllFiles)
+			gui.LogAction(gui.Tr.Actions.StageAllFiles)
 			if err := gui.Git.WorkingTree.StageAll(); err != nil {
 				return gui.PopupHandler.Error(err)
 			}
@@ -452,7 +452,7 @@ func (gui *Gui) handleAmendCommitPress() error {
 		Prompt: gui.Tr.SureToAmend,
 		HandleConfirm: func() error {
 			cmdObj := gui.Git.Commit.AmendHeadCmdObj()
-			gui.logAction(gui.Tr.Actions.AmendCommit)
+			gui.LogAction(gui.Tr.Actions.AmendCommit)
 			return gui.withGpgHandling(cmdObj, gui.Tr.AmendingStatus, nil)
 		},
 	})
@@ -469,7 +469,7 @@ func (gui *Gui) handleCommitEditorPress() error {
 		return gui.promptToStageAllAndRetry(gui.handleCommitEditorPress)
 	}
 
-	gui.logAction(gui.Tr.Actions.Commit)
+	gui.LogAction(gui.Tr.Actions.Commit)
 	return gui.runSubprocessWithSuspenseAndRefresh(
 		gui.Git.Commit.CommitEditorCmdObj(),
 	)
@@ -517,7 +517,7 @@ func (gui *Gui) editFileAtLine(filename string, lineNumber int) error {
 		return gui.PopupHandler.Error(err)
 	}
 
-	gui.logAction(gui.Tr.Actions.EditFile)
+	gui.LogAction(gui.Tr.Actions.EditFile)
 	return gui.runSubprocessWithSuspenseAndRefresh(
 		gui.OSCommand.Cmd.NewShell(cmdStr),
 	)
@@ -706,7 +706,7 @@ func (gui *Gui) pullWithLock(opts PullFilesOptions) error {
 	gui.Mutexes.FetchMutex.Lock()
 	defer gui.Mutexes.FetchMutex.Unlock()
 
-	gui.logAction(opts.action)
+	gui.LogAction(opts.action)
 
 	err := gui.Git.Sync.Pull(
 		git_commands.PullOptions{
@@ -730,7 +730,7 @@ type pushOpts struct {
 
 func (gui *Gui) push(opts pushOpts) error {
 	return gui.PopupHandler.WithLoaderPanel(gui.Tr.PushWait, func() error {
-		gui.logAction(gui.Tr.Actions.Push)
+		gui.LogAction(gui.Tr.Actions.Push)
 		err := gui.Git.Sync.Push(git_commands.PushOpts{
 			Force:          opts.force,
 			UpstreamRemote: opts.upstreamRemote,
@@ -859,7 +859,7 @@ func (gui *Gui) switchToMerge() error {
 }
 
 func (gui *Gui) openFile(filename string) error {
-	gui.logAction(gui.Tr.Actions.OpenFile)
+	gui.LogAction(gui.Tr.Actions.OpenFile)
 	if err := gui.OSCommand.OpenFile(filename); err != nil {
 		return gui.PopupHandler.Error(err)
 	}
@@ -892,7 +892,7 @@ func (gui *Gui) handleCustomCommand() error {
 				gui.Log.Error(err)
 			}
 
-			gui.logAction(gui.Tr.Actions.CustomCommand)
+			gui.LogAction(gui.Tr.Actions.CustomCommand)
 			return gui.runSubprocessWithSuspenseAndRefresh(
 				gui.OSCommand.Cmd.NewShell(command),
 			)
@@ -907,14 +907,14 @@ func (gui *Gui) handleCreateStashMenu() error {
 			{
 				DisplayString: gui.Tr.LcStashAllChanges,
 				OnPress: func() error {
-					gui.logAction(gui.Tr.Actions.StashAllChanges)
+					gui.LogAction(gui.Tr.Actions.StashAllChanges)
 					return gui.handleStashSave(gui.Git.Stash.Save)
 				},
 			},
 			{
 				DisplayString: gui.Tr.LcStashStagedChanges,
 				OnPress: func() error {
-					gui.logAction(gui.Tr.Actions.StashStagedChanges)
+					gui.LogAction(gui.Tr.Actions.StashStagedChanges)
 					return gui.handleStashSave(gui.Git.Stash.SaveStagedChanges)
 				},
 			},
@@ -977,7 +977,7 @@ func (gui *Gui) handleOpenMergeTool() error {
 		Title:  gui.Tr.MergeToolTitle,
 		Prompt: gui.Tr.MergeToolPrompt,
 		HandleConfirm: func() error {
-			gui.logAction(gui.Tr.Actions.OpenMergeTool)
+			gui.LogAction(gui.Tr.Actions.OpenMergeTool)
 			return gui.runSubprocessWithSuspenseAndRefresh(
 				gui.Git.WorkingTree.OpenMergeToolCmdObj(),
 			)
@@ -987,7 +987,7 @@ func (gui *Gui) handleOpenMergeTool() error {
 
 func (gui *Gui) resetSubmodule(submodule *models.SubmoduleConfig) error {
 	return gui.PopupHandler.WithWaitingStatus(gui.Tr.LcResettingSubmoduleStatus, func() error {
-		gui.logAction(gui.Tr.Actions.ResetSubmodule)
+		gui.LogAction(gui.Tr.Actions.ResetSubmodule)
 
 		file := gui.fileForSubmodule(submodule)
 		if file != nil {

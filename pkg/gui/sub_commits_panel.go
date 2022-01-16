@@ -47,7 +47,7 @@ func (gui *Gui) handleCheckoutSubCommit() error {
 		Title:  gui.Tr.LcCheckoutCommit,
 		Prompt: gui.Tr.SureCheckoutThisCommit,
 		HandleConfirm: func() error {
-			gui.logAction(gui.Tr.Actions.CheckoutCommit)
+			gui.LogAction(gui.Tr.Actions.CheckoutCommit)
 			return gui.handleCheckoutRef(commit.Sha, handleCheckoutRefOptions{})
 		},
 	})

@@ -52,7 +52,7 @@ func (gui *Gui) handleStashApply() error {
 	skipStashWarning := gui.UserConfig.Gui.SkipStashWarning
 
 	apply := func() error {
-		gui.logAction(gui.Tr.Actions.Stash)
+		gui.LogAction(gui.Tr.Actions.Stash)
 		if err := gui.Git.Stash.Apply(stashEntry.Index); err != nil {
 			return gui.PopupHandler.Error(err)
 		}
@@ -81,7 +81,7 @@ func (gui *Gui) handleStashPop() error {
 	skipStashWarning := gui.UserConfig.Gui.SkipStashWarning
 
 	pop := func() error {
-		gui.logAction(gui.Tr.Actions.Stash)
+		gui.LogAction(gui.Tr.Actions.Stash)
 		if err := gui.Git.Stash.Pop(stashEntry.Index); err != nil {
 			return gui.PopupHandler.Error(err)
 		}
@@ -111,7 +111,7 @@ func (gui *Gui) handleStashDrop() error {
 		Title:  gui.Tr.StashDrop,
 		Prompt: gui.Tr.SureDropStashEntry,
 		HandleConfirm: func() error {
-			gui.logAction(gui.Tr.Actions.Stash)
+			gui.LogAction(gui.Tr.Actions.Stash)
 			if err := gui.Git.Stash.Drop(stashEntry.Index); err != nil {
 				return gui.PopupHandler.Error(err)
 			}

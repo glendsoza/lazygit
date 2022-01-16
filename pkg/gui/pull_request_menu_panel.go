@@ -62,7 +62,7 @@ func (gui *Gui) createPullRequest(from string, to string) error {
 		return gui.PopupHandler.Error(err)
 	}
 
-	gui.logAction(gui.Tr.Actions.OpenPullRequest)
+	gui.LogAction(gui.Tr.Actions.OpenPullRequest)
 
 	if err := gui.OSCommand.OpenLink(url); err != nil {
 		return gui.PopupHandler.Error(err)

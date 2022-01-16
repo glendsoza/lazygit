@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/jesseduffield/gocui"
+	"github.com/jesseduffield/lazygit/pkg/config"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
 type ListContext struct {
@@ -22,6 +24,12 @@ type ListContext struct {
 	// content based on the selection (e.g. for showing the selected commit)
 	RenderSelection bool
 
+	GetNavigationKeybindingOverrides func(
+		getKey func(key string) interface{},
+		config config.KeybindingConfig,
+		guards types.KeybindingGuards,
+	) []*types.Binding
+
 	Gui *Gui
 
 	*BasicContext
@@ -30,16 +38,17 @@ type ListContext struct {
 type IListContext interface {
 	GetSelectedItem() (ListItem, bool)
 	GetSelectedItemId() string
+
 	handlePrevLine() error
 	handleNextLine() error
 	handleScrollLeft() error
 	handleScrollRight() error
-	handleLineChange(change int) error
 	handleNextPage() error
 	handleGotoTop() error
 	handleGotoBottom() error
 	handlePrevPage() error
 	handleClick() error
+
 	onSearchSelect(selectedLineIdx int) error
 	FocusLine()
 	HandleRenderToMain() error
@@ -280,4 +289,46 @@ func (self *ListContext) HandleRenderToMain() error {
 	}
 
 	return nil
+}
+
+func (self *ListContext) Keybindings(
+	getKey func(key string) interface{},
+	config config.KeybindingConfig,
+	guards types.KeybindingGuards,
+) []*types.Binding {
+	bindings := self.BasicContext.Keybindings(getKey, config, guards)
+
+	if self.GetNavigationKeybindingOverrides != nil {
+		// keybindings are processed from top to bottom so we add these ones before adding the defaults
+		bindings = append(bindings, self.GetNavigationKeybindingOverrides(getKey, config, guards)...)
+	}
+
+	bindings = append(bindings, []*types.Binding{
+		{Tag: "navigation", Key: getKey(config.Universal.PrevItemAlt), Modifier: gocui.ModNone, Handler: self.handlePrevLine},
+		{Tag: "navigation", Key: getKey(config.Universal.PrevItem), Modifier: gocui.ModNone, Handler: self.handlePrevLine},
+		{Tag: "navigation", Key: gocui.MouseWheelUp, Modifier: gocui.ModNone, Handler: self.handlePrevLine},
+		{Tag: "navigation", Key: getKey(config.Universal.NextItemAlt), Modifier: gocui.ModNone, Handler: self.handleNextLine},
+		{Tag: "navigation", Key: getKey(config.Universal.NextItem), Modifier: gocui.ModNone, Handler: self.handleNextLine},
+		{Tag: "navigation", Key: getKey(config.Universal.PrevPage), Modifier: gocui.ModNone, Handler: self.handlePrevPage, Description: self.Gui.Tr.LcPrevPage},
+		{Tag: "navigation", Key: getKey(config.Universal.NextPage), Modifier: gocui.ModNone, Handler: self.handleNextPage, Description: self.Gui.Tr.LcNextPage},
+		{Tag: "navigation", Key: getKey(config.Universal.GotoTop), Modifier: gocui.ModNone, Handler: self.handleGotoTop, Description: self.Gui.Tr.LcGotoTop},
+		{Tag: "navigation", Key: gocui.MouseWheelDown, Modifier: gocui.ModNone, Handler: self.handleNextLine},
+		{Key: gocui.MouseLeft, Modifier: gocui.ModNone, Handler: self.handleClick},
+		{Tag: "navigation", Key: getKey(config.Universal.ScrollLeft), Modifier: gocui.ModNone, Handler: self.handleScrollLeft},
+		{Tag: "navigation", Key: getKey(config.Universal.ScrollRight), Modifier: gocui.ModNone, Handler: self.handleScrollRight},
+		{
+			Key:         getKey(config.Universal.StartSearch),
+			Handler:     func() error { return self.Gui.handleOpenSearch(self.GetViewName()) },
+			Description: self.Gui.Tr.LcStartSearch,
+			Tag:         "navigation",
+		},
+		{
+			Key:         getKey(config.Universal.GotoBottom),
+			Handler:     self.handleGotoBottom,
+			Description: self.Gui.Tr.LcGotoBottom,
+			Tag:         "navigation",
+		},
+	}...)
+
+	return bindings
 }

@@ -187,6 +187,10 @@ func (gui *Gui) getKey(key string) interface{} {
 func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 	config := gui.UserConfig.Keybinding
 
+	guards := types.KeybindingGuards{
+		OutsideFilterMode: gui.outsideFilterMode,
+	}
+
 	bindings := []*types.Binding{
 		{
 			ViewName: "",
@@ -579,14 +583,14 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 			ViewName:    "branches",
 			Contexts:    []string{string(LOCAL_BRANCHES_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Branches.RebaseBranch),
-			Handler:     gui.handleRebaseOntoLocalBranch,
+			Handler:     guards.OutsideFilterMode(gui.handleRebaseOntoLocalBranch),
 			Description: gui.Tr.LcRebaseBranch,
 		},
 		{
 			ViewName:    "branches",
 			Contexts:    []string{string(LOCAL_BRANCHES_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Branches.MergeIntoCurrentBranch),
-			Handler:     gui.handleMerge,
+			Handler:     guards.OutsideFilterMode(gui.handleMerge),
 			Description: gui.Tr.LcMergeIntoCurrentBranch,
 		},
 		{
@@ -716,22 +720,15 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.SquashDown),
-			Handler:     gui.handleCommitSquashDown,
-			Description: gui.Tr.LcSquashDown,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.RenameCommit),
-			Handler:     gui.handleRewordCommit,
+			Handler:     guards.OutsideFilterMode(gui.handleRewordCommit),
 			Description: gui.Tr.LcRewordCommit,
 		},
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.RenameCommitWithEditor),
-			Handler:     gui.handleRewordCommitEditor,
+			Handler:     guards.OutsideFilterMode(gui.handleRewordCommitEditor),
 			Description: gui.Tr.LcRenameCommitEditor,
 		},
 		{
@@ -744,71 +741,64 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.MarkCommitAsFixup),
-			Handler:     gui.handleCommitFixup,
-			Description: gui.Tr.LcFixupCommit,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.CreateFixupCommit),
-			Handler:     gui.handleCreateFixupCommit,
+			Handler:     guards.OutsideFilterMode(gui.handleCreateFixupCommit),
 			Description: gui.Tr.LcCreateFixupCommit,
 		},
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.SquashAboveCommits),
-			Handler:     gui.handleSquashAllAboveFixupCommits,
+			Handler:     guards.OutsideFilterMode(gui.handleSquashAllAboveFixupCommits),
 			Description: gui.Tr.LcSquashAboveCommits,
 		},
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Universal.Remove),
-			Handler:     gui.handleCommitDelete,
+			Handler:     guards.OutsideFilterMode(gui.handleCommitDelete),
 			Description: gui.Tr.LcDeleteCommit,
 		},
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.MoveDownCommit),
-			Handler:     gui.handleCommitMoveDown,
+			Handler:     guards.OutsideFilterMode(gui.handleCommitMoveDown),
 			Description: gui.Tr.LcMoveDownCommit,
 		},
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.MoveUpCommit),
-			Handler:     gui.handleCommitMoveUp,
+			Handler:     guards.OutsideFilterMode(gui.handleCommitMoveUp),
 			Description: gui.Tr.LcMoveUpCommit,
 		},
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Universal.Edit),
-			Handler:     gui.handleCommitEdit,
+			Handler:     guards.OutsideFilterMode(gui.handleCommitEdit),
 			Description: gui.Tr.LcEditCommit,
 		},
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.AmendToCommit),
-			Handler:     gui.handleCommitAmendTo,
+			Handler:     guards.OutsideFilterMode(gui.handleCommitAmendTo),
 			Description: gui.Tr.LcAmendToCommit,
 		},
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.PickCommit),
-			Handler:     gui.handleCommitPick,
+			Handler:     guards.OutsideFilterMode(gui.handleCommitPick),
 			Description: gui.Tr.LcPickCommit,
 		},
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.RevertCommit),
-			Handler:     gui.handleCommitRevert,
+			Handler:     guards.OutsideFilterMode(gui.handleCommitRevert),
 			Description: gui.Tr.LcRevertCommit,
 		},
 		{
@@ -836,7 +826,7 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.PasteCommits),
-			Handler:     gui.HandlePasteCommits,
+			Handler:     guards.OutsideFilterMode(gui.HandlePasteCommits),
 			Description: gui.Tr.LcPasteCommits,
 		},
 		{
@@ -915,14 +905,14 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 			ViewName:    "commits",
 			Contexts:    []string{string(REFLOG_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.CherryPickCopy),
-			Handler:     gui.handleCopyCommit,
+			Handler:     guards.OutsideFilterMode(gui.handleCopyCommit),
 			Description: gui.Tr.LcCherryPickCopy,
 		},
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(REFLOG_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.CherryPickCopyRange),
-			Handler:     gui.handleCopyCommitRange,
+			Handler:     guards.OutsideFilterMode(gui.handleCopyCommitRange),
 			Description: gui.Tr.LcCherryPickCopyRange,
 		},
 		{
@@ -1609,7 +1599,7 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 			ViewName:    "branches",
 			Contexts:    []string{string(REMOTE_BRANCHES_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Branches.MergeIntoCurrentBranch),
-			Handler:     gui.handleMergeRemoteBranch,
+			Handler:     guards.OutsideFilterMode(gui.handleMergeRemoteBranch),
 			Description: gui.Tr.LcMergeIntoCurrentBranch,
 		},
 		{
@@ -1623,7 +1613,7 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 			ViewName:    "branches",
 			Contexts:    []string{string(REMOTE_BRANCHES_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Branches.RebaseBranch),
-			Handler:     gui.handleRebaseOntoRemoteBranch,
+			Handler:     guards.OutsideFilterMode(gui.handleRebaseOntoRemoteBranch),
 			Description: gui.Tr.LcRebaseBranch,
 		},
 		{
@@ -1777,22 +1767,13 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 		},
 	}
 
-	type ContextKeybindings struct {
-		contextKey ContextKey
-		viewName   string
-		bindings   []*types.Binding
-	}
+	for _, context := range gui.allContexts() {
+		viewName := context.GetViewName()
+		contextKey := context.GetKey()
 
-	for _, contextKeybindings := range []ContextKeybindings{
-		{
-			contextKey: SUBMODULES_CONTEXT_KEY,
-			viewName:   "files",
-			bindings:   gui.Controllers.Submodules.Keybindings(gui.getKey, config),
-		},
-	} {
-		for _, binding := range contextKeybindings.bindings {
-			binding.Contexts = []string{string(contextKeybindings.contextKey)}
-			binding.ViewName = contextKeybindings.viewName
+		for _, binding := range context.Keybindings(gui.getKey, config, guards) {
+			binding.Contexts = []string{string(contextKey)}
+			binding.ViewName = viewName
 			bindings = append(bindings, binding)
 		}
 	}
@@ -1841,8 +1822,6 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 			},
 		}...)
 	}
-
-	bindings = append(bindings, gui.getListContextKeyBindings()...)
 
 	return bindings
 }

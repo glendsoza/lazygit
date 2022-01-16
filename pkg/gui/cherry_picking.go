@@ -22,10 +22,6 @@ func (gui *Gui) resetCherryPickingIfNecessary(context Context) error {
 }
 
 func (gui *Gui) handleCopyCommit() error {
-	if ok, err := gui.validateNotInFilterMode(); err != nil || !ok {
-		return err
-	}
-
 	// get currently selected commit, add the sha to state.
 	context := gui.currentSideListContext()
 	if context == nil {
@@ -102,10 +98,6 @@ func (gui *Gui) addCommitToCherryPickedCommits(index int) {
 }
 
 func (gui *Gui) handleCopyCommitRange() error {
-	if ok, err := gui.validateNotInFilterMode(); err != nil || !ok {
-		return err
-	}
-
 	// get currently selected commit, add the sha to state.
 	context := gui.currentSideListContext()
 	if context == nil {
@@ -142,16 +134,12 @@ func (gui *Gui) handleCopyCommitRange() error {
 
 // HandlePasteCommits begins a cherry-pick rebase with the commits the user has copied
 func (gui *Gui) HandlePasteCommits() error {
-	if ok, err := gui.validateNotInFilterMode(); err != nil || !ok {
-		return err
-	}
-
 	return gui.PopupHandler.Ask(popup.AskOpts{
 		Title:  gui.Tr.CherryPick,
 		Prompt: gui.Tr.SureCherryPick,
 		HandleConfirm: func() error {
 			return gui.PopupHandler.WithWaitingStatus(gui.Tr.CherryPickingStatus, func() error {
-				gui.logAction(gui.Tr.Actions.CherryPick)
+				gui.LogAction(gui.Tr.Actions.CherryPick)
 				err := gui.Git.Rebase.CherryPickCommits(gui.State.Modes.CherryPicking.CherryPickedCommits)
 				return gui.handleGenericMergeCommandResult(err)
 			})

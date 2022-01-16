@@ -101,13 +101,13 @@ func (gui *Gui) reflogUndo() error {
 
 		switch action.kind {
 		case COMMIT, REBASE:
-			gui.logAction(gui.Tr.Actions.Undo)
+			gui.LogAction(gui.Tr.Actions.Undo)
 			return true, gui.handleHardResetWithAutoStash(action.from, handleHardResetWithAutoStashOptions{
 				EnvVars:       undoEnvVars,
 				WaitingStatus: undoingStatus,
 			})
 		case CHECKOUT:
-			gui.logAction(gui.Tr.Actions.Undo)
+			gui.LogAction(gui.Tr.Actions.Undo)
 			return true, gui.handleCheckoutRef(action.from, handleCheckoutRefOptions{
 				EnvVars:       undoEnvVars,
 				WaitingStatus: undoingStatus,
@@ -139,13 +139,13 @@ func (gui *Gui) reflogRedo() error {
 
 		switch action.kind {
 		case COMMIT, REBASE:
-			gui.logAction(gui.Tr.Actions.Redo)
+			gui.LogAction(gui.Tr.Actions.Redo)
 			return true, gui.handleHardResetWithAutoStash(action.to, handleHardResetWithAutoStashOptions{
 				EnvVars:       redoEnvVars,
 				WaitingStatus: redoingStatus,
 			})
 		case CHECKOUT:
-			gui.logAction(gui.Tr.Actions.Redo)
+			gui.LogAction(gui.Tr.Actions.Redo)
 			return true, gui.handleCheckoutRef(action.to, handleCheckoutRefOptions{
 				EnvVars:       redoEnvVars,
 				WaitingStatus: redoingStatus,

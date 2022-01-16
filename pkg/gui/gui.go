@@ -125,6 +125,7 @@ type Gui struct {
 
 	IsNewRepo bool
 
+	// controllers define keybindings for a given context
 	Controllers Controllers
 
 	// flag as to whether or not the diff view should ignore whitespace
@@ -132,6 +133,9 @@ type Gui struct {
 
 	// if this is true, we'll load our commits using `git log --all`
 	ShowWholeGitGraph bool
+
+	// we use this to decide whether we'll return to the original directory that
+	// lazygit was opened in, or if we'll retain the one we're currently in.
 	RetainOriginalDir bool
 
 	PrevLayout PrevLayout
@@ -207,7 +211,8 @@ type GuiRepoState struct {
 }
 
 type Controllers struct {
-	Submodules *controllers.SubmodulesController
+	Submodules   *controllers.SubmodulesController
+	LocalCommits *controllers.LocalCommitsController
 }
 
 type listPanelState struct {
@@ -460,7 +465,7 @@ type guiCommon struct {
 var _ controllers.IGuiCommon = &guiCommon{}
 
 func (self *guiCommon) LogAction(msg string) {
-	self.gui.logAction(msg)
+	self.gui.LogAction(msg)
 }
 
 func (self *guiCommon) Refresh(opts types.RefreshOptions) error {
@@ -515,8 +520,6 @@ func NewGui(
 		return nil, err
 	}
 
-	gui.resetState(filterPath, false)
-
 	gui.watchFilesForChanges()
 
 	gui.PopupHandler = popup.NewPopupHandler(
@@ -526,6 +529,7 @@ func NewGui(
 		func() error { return gui.closeConfirmationPrompt(false) },
 		gui.createMenu,
 		gui.withWaitingStatus,
+		gui.raiseToast,
 	)
 
 	authors.SetCustomAuthors(gui.UserConfig.Gui.AuthorColors)
@@ -536,12 +540,23 @@ func NewGui(
 	gui.Controllers = Controllers{
 		Submodules: controllers.NewSubmodulesController(
 			controllerCommon,
-			gui.enterSubmodule,
 			gui.Git,
-			gui.State.Submodules,
+			gui.enterSubmodule,
 			gui.getSelectedSubmodule,
 		),
+
+		LocalCommits: controllers.NewLocalCommitsController(
+			controllerCommon,
+			gui.Git,
+			gui.getSelectedLocalCommit,
+			func() []*models.Commit { return gui.State.Commits },
+			func() int { return gui.State.Panels.Commits.SelectedLineIdx },
+			gui.handleMidRebaseCommand,
+			gui.handleGenericMergeCommandResult,
+		),
 	}
+
+	gui.resetState(filterPath, false)
 
 	return gui, nil
 }

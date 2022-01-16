@@ -59,7 +59,7 @@ func (gui *Gui) handleDeleteRemoteBranch() error {
 		Prompt: message,
 		HandleConfirm: func() error {
 			return gui.PopupHandler.WithWaitingStatus(gui.Tr.DeletingStatus, func() error {
-				gui.logAction(gui.Tr.Actions.DeleteRemoteBranch)
+				gui.LogAction(gui.Tr.Actions.DeleteRemoteBranch)
 				err := gui.Git.Remote.DeleteRemoteBranch(remoteBranch.RemoteName, remoteBranch.Name)
 				if err != nil {
 					_ = gui.PopupHandler.Error(err)
@@ -92,7 +92,7 @@ func (gui *Gui) handleSetBranchUpstream() error {
 		Title:  gui.Tr.SetUpstreamTitle,
 		Prompt: message,
 		HandleConfirm: func() error {
-			gui.logAction(gui.Tr.Actions.SetBranchUpstream)
+			gui.LogAction(gui.Tr.Actions.SetBranchUpstream)
 			if err := gui.Git.Branch.SetUpstream(selectedBranch.RemoteName, selectedBranch.Name, checkedOutBranch.Name); err != nil {
 				return gui.PopupHandler.Error(err)
 			}
