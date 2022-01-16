@@ -58,6 +58,11 @@ func (self *LocalCommitsController) Keybindings(
 			Handler:     guards.OutsideFilterMode(self.fixup),
 			Description: self.c.Tr.LcFixupCommit,
 		},
+		{
+			Key:         getKey(config.Commits.RenameCommit),
+			Handler:     guards.OutsideFilterMode(self.reword),
+			Description: self.c.Tr.LcRewordCommit,
+		},
 	}
 }
 
@@ -115,4 +120,38 @@ func (self *LocalCommitsController) fixup() error {
 
 func (self *LocalCommitsController) interactiveRebase(action string) error {
 	return self.git.Rebase.InteractiveRebase(self.getCommits(), self.getSelectedLocalCommitIdx(), action)
+}
+
+func (self *LocalCommitsController) reword() error {
+	applied, err := self.handleMidRebaseCommand("reword")
+	if err != nil {
+		return err
+	}
+	if applied {
+		return nil
+	}
+
+	commit := self.getSelectedLocalCommit()
+	if commit == nil {
+		return nil
+	}
+
+	message, err := self.git.Commit.GetCommitMessage(commit.Sha)
+	if err != nil {
+		return self.c.Error(err)
+	}
+
+	// TODO: use the commit message panel here
+	return self.c.Prompt(popup.PromptOpts{
+		Title:          self.c.Tr.LcRewordCommit,
+		InitialContent: message,
+		HandleConfirm: func(response string) error {
+			self.c.LogAction(self.c.Tr.Actions.RewordCommit)
+			if err := self.git.Rebase.RewordCommit(self.getCommits(), self.getSelectedLocalCommitIdx(), response); err != nil {
+				return self.c.Error(err)
+			}
+
+			return self.c.Refresh(types.RefreshOptions{Mode: types.ASYNC})
+		},
+	})
 }

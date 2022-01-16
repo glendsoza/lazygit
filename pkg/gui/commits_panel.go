@@ -150,40 +150,6 @@ func (gui *Gui) refreshRebaseCommits() error {
 
 // specific functions
 
-func (gui *Gui) handleRewordCommit() error {
-	applied, err := gui.handleMidRebaseCommand("reword")
-	if err != nil {
-		return err
-	}
-	if applied {
-		return nil
-	}
-
-	commit := gui.getSelectedLocalCommit()
-	if commit == nil {
-		return nil
-	}
-
-	message, err := gui.Git.Commit.GetCommitMessage(commit.Sha)
-	if err != nil {
-		return gui.PopupHandler.Error(err)
-	}
-
-	// TODO: use the commit message panel here
-	return gui.PopupHandler.Prompt(popup.PromptOpts{
-		Title:          gui.Tr.LcRewordCommit,
-		InitialContent: message,
-		HandleConfirm: func(response string) error {
-			gui.LogAction(gui.Tr.Actions.RewordCommit)
-			if err := gui.Git.Rebase.RewordCommit(gui.State.Commits, gui.State.Panels.Commits.SelectedLineIdx, response); err != nil {
-				return gui.PopupHandler.Error(err)
-			}
-
-			return gui.refreshSidePanels(types.RefreshOptions{Mode: types.ASYNC})
-		},
-	})
-}
-
 func (gui *Gui) handleRewordCommitEditor() error {
 	applied, err := gui.handleMidRebaseCommand("reword")
 	if err != nil {
