@@ -720,13 +720,6 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.RenameCommitWithEditor),
-			Handler:     guards.OutsideFilterMode(gui.handleRewordCommitEditor),
-			Description: gui.Tr.LcRenameCommitEditor,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.ViewResetOptions),
 			Handler:     gui.handleCreateCommitResetMenu,
 			Description: gui.Tr.LcResetToThisCommit,

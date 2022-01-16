@@ -253,7 +253,7 @@ func (gui *Gui) handleCopySelectedSideContextItemToClipboard() error {
 
 	truncatedItemId := utils.TruncateWithEllipsis(strings.Replace(itemId, "\n", " ", -1), 50)
 
-	gui.raiseToast(fmt.Sprintf("'%s' %s", truncatedItemId, gui.Tr.LcCopiedToClipboard))
+	gui.PopupHandler.Toast(fmt.Sprintf("'%s' %s", truncatedItemId, gui.Tr.LcCopiedToClipboard))
 
 	return nil
 }

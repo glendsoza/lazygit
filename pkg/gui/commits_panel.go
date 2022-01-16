@@ -150,27 +150,6 @@ func (gui *Gui) refreshRebaseCommits() error {
 
 // specific functions
 
-func (gui *Gui) handleRewordCommitEditor() error {
-	applied, err := gui.handleMidRebaseCommand("reword")
-	if err != nil {
-		return err
-	}
-	if applied {
-		return nil
-	}
-
-	gui.LogAction(gui.Tr.Actions.RewordCommit)
-	subProcess, err := gui.Git.Rebase.RewordCommitInEditor(gui.State.Commits, gui.State.Panels.Commits.SelectedLineIdx)
-	if err != nil {
-		return gui.PopupHandler.Error(err)
-	}
-	if subProcess != nil {
-		return gui.runSubprocessWithSuspenseAndRefresh(subProcess)
-	}
-
-	return nil
-}
-
 // handleMidRebaseCommand sees if the selected commit is in fact a rebasing
 // commit meaning you are trying to edit the todo file rather than actually
 // begin a rebase. It then updates the todo file with that action
@@ -189,7 +168,7 @@ func (gui *Gui) handleMidRebaseCommand(action string) (bool, error) {
 	}
 
 	gui.LogAction("Update rebase TODO")
-	gui.logCommand(
+	gui.LogCommand(
 		fmt.Sprintf("Updating rebase action of commit %s to '%s'", selectedCommit.ShortSha(), action),
 		false,
 	)
@@ -234,7 +213,7 @@ func (gui *Gui) handleCommitMoveDown() error {
 		// logging directly here because MoveTodoDown doesn't have enough information
 		// to provide a useful log
 		gui.LogAction(gui.Tr.Actions.MoveCommitDown)
-		gui.logCommand(fmt.Sprintf("Moving commit %s down", selectedCommit.ShortSha()), false)
+		gui.LogCommand(fmt.Sprintf("Moving commit %s down", selectedCommit.ShortSha()), false)
 
 		if err := gui.Git.Rebase.MoveTodoDown(index); err != nil {
 			return gui.PopupHandler.Error(err)
@@ -264,7 +243,7 @@ func (gui *Gui) handleCommitMoveUp() error {
 		// logging directly here because MoveTodoDown doesn't have enough information
 		// to provide a useful log
 		gui.LogAction(gui.Tr.Actions.MoveCommitUp)
-		gui.logCommand(
+		gui.LogCommand(
 			fmt.Sprintf("Moving commit %s up", selectedCommit.ShortSha()),
 			false,
 		)
@@ -572,7 +551,7 @@ func (gui *Gui) handleCopySelectedCommitMessageToClipboard() error {
 		return gui.PopupHandler.Error(err)
 	}
 
-	gui.raiseToast(gui.Tr.CommitMessageCopiedToClipboard)
+	gui.PopupHandler.Toast(gui.Tr.CommitMessageCopiedToClipboard)
 
 	return nil
 }

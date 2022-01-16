@@ -7,7 +7,7 @@ func (gui *Gui) toggleWhitespaceInDiffView() error {
 	if gui.IgnoreWhitespaceInDiffView {
 		toastMessage = gui.Tr.IgnoringWhitespaceInDiffView
 	}
-	gui.raiseToast(toastMessage)
+	gui.PopupHandler.Toast(toastMessage)
 
 	return gui.refreshFilesAndSubmodules()
 }

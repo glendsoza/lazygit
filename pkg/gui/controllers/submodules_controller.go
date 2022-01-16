@@ -25,6 +25,8 @@ type SubmodulesController struct {
 	getSelectedSubmodule func() *models.SubmoduleConfig
 }
 
+var _ IController = &SubmodulesController{}
+
 func NewSubmodulesController(
 	c *ControllerCommon,
 	git *commands.GitCommand,

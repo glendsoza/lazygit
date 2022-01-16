@@ -125,7 +125,7 @@ func (gui *Gui) handleCopyPullRequestURLPress() error {
 		return gui.PopupHandler.Error(err)
 	}
 
-	gui.raiseToast(gui.Tr.PullRequestURLCopiedToClipboard)
+	gui.PopupHandler.Toast(gui.Tr.PullRequestURLCopiedToClipboard)
 
 	return nil
 }

@@ -22,6 +22,8 @@ type LocalCommitsController struct {
 	handleGenericMergeCommandResult func(error) error
 }
 
+var _ IController = &LocalCommitsController{}
+
 func NewLocalCommitsController(
 	c *ControllerCommon,
 	git *commands.GitCommand,
@@ -62,6 +64,11 @@ func (self *LocalCommitsController) Keybindings(
 			Key:         getKey(config.Commits.RenameCommit),
 			Handler:     guards.OutsideFilterMode(self.reword),
 			Description: self.c.Tr.LcRewordCommit,
+		},
+		{
+			Key:         getKey(config.Commits.RenameCommitWithEditor),
+			Handler:     guards.OutsideFilterMode(self.rewordEditor),
+			Description: self.c.Tr.LcRenameCommitEditor,
 		},
 	}
 }
@@ -154,4 +161,27 @@ func (self *LocalCommitsController) reword() error {
 			return self.c.Refresh(types.RefreshOptions{Mode: types.ASYNC})
 		},
 	})
+}
+
+func (self *LocalCommitsController) rewordEditor() error {
+	applied, err := self.handleMidRebaseCommand("reword")
+	if err != nil {
+		return err
+	}
+	if applied {
+		return nil
+	}
+
+	self.c.LogAction(self.c.Tr.Actions.RewordCommit)
+	subProcess, err := self.git.Rebase.RewordCommitInEditor(
+		self.getCommits(), self.getSelectedLocalCommitIdx(),
+	)
+	if err != nil {
+		return self.c.Error(err)
+	}
+	if subProcess != nil {
+		return self.c.RunSubprocessAndRefresh(subProcess)
+	}
+
+	return nil
 }

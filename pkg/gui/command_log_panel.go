@@ -32,7 +32,7 @@ func (gui *Gui) LogAction(action string) {
 	fmt.Fprint(gui.Views.Extras, "\n"+style.FgYellow.Sprint(action))
 }
 
-func (gui *Gui) logCommand(cmdStr string, commandLine bool) {
+func (gui *Gui) LogCommand(cmdStr string, commandLine bool) {
 	if gui.Views.Extras == nil {
 		return
 	}

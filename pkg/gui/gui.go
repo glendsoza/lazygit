@@ -457,21 +457,6 @@ func (gui *Gui) resetState(filterPath string, reuseState bool) {
 	gui.RepoStateMap[Repo(currentDir)] = gui.State
 }
 
-type guiCommon struct {
-	gui *Gui
-	popup.IPopupHandler
-}
-
-var _ controllers.IGuiCommon = &guiCommon{}
-
-func (self *guiCommon) LogAction(msg string) {
-	self.gui.LogAction(msg)
-}
-
-func (self *guiCommon) Refresh(opts types.RefreshOptions) error {
-	return self.gui.refreshSidePanels(opts)
-}
-
 // for now the split view will always be on
 // NewGui builds a new gui handler
 func NewGui(
@@ -502,7 +487,7 @@ func NewGui(
 
 	guiIO := oscommands.NewGuiIO(
 		cmn.Log,
-		gui.logCommand,
+		gui.LogCommand,
 		gui.getCmdWriter,
 		gui.promptUserForCredential,
 	)
@@ -529,7 +514,7 @@ func NewGui(
 		func() error { return gui.closeConfirmationPrompt(false) },
 		gui.createMenu,
 		gui.withWaitingStatus,
-		gui.raiseToast,
+		gui.toast,
 	)
 
 	authors.SetCustomAuthors(gui.UserConfig.Gui.AuthorColors)
@@ -723,7 +708,7 @@ func (gui *Gui) runSubprocessWithSuspense(subprocess oscommands.ICmdObj) (bool, 
 }
 
 func (gui *Gui) runSubprocess(cmdObj oscommands.ICmdObj) error { //nolint:unparam
-	gui.logCommand(cmdObj.ToString(), true)
+	gui.LogCommand(cmdObj.ToString(), true)
 
 	subprocess := cmdObj.GetCmd()
 	subprocess.Stdout = os.Stdout
