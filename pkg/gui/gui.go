@@ -17,6 +17,7 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
 	"github.com/jesseduffield/lazygit/pkg/common"
 	"github.com/jesseduffield/lazygit/pkg/config"
+	"github.com/jesseduffield/lazygit/pkg/gui/context"
 	"github.com/jesseduffield/lazygit/pkg/gui/controllers"
 	"github.com/jesseduffield/lazygit/pkg/gui/filetree"
 	"github.com/jesseduffield/lazygit/pkg/gui/lbl"
@@ -54,13 +55,13 @@ const StartupPopupVersion = 5
 var OverlappingEdges = false
 
 type ContextManager struct {
-	ContextStack []Context
+	ContextStack []types.Context
 	sync.RWMutex
 }
 
-func NewContextManager(initialContext Context) ContextManager {
+func NewContextManager(initialContext types.Context) ContextManager {
 	return ContextManager{
-		ContextStack: []Context{initialContext},
+		ContextStack: []types.Context{initialContext},
 		RWMutex:      sync.RWMutex{},
 	}
 }
@@ -176,7 +177,7 @@ type GuiRepoState struct {
 	Updating       bool
 	Panels         *panelStates
 	SplitMainPanel bool
-	MainContext    ContextKey // used to keep the main and secondary views' contexts in sync
+	MainContext    types.ContextKey // used to keep the main and secondary views' contexts in sync
 
 	IsRefreshingFiles bool
 	Searching         searchingState
@@ -186,9 +187,9 @@ type GuiRepoState struct {
 	Modes Modes
 
 	ContextManager    ContextManager
-	Contexts          ContextTree
-	ViewContextMap    map[string]Context
-	ViewTabContextMap map[string][]tabContext
+	Contexts          context.ContextTree
+	ViewContextMap    map[string]types.Context
+	ViewTabContextMap map[string][]context.TabContext
 
 	// WindowViewNameMap is a mapping of windows to the current view of that window.
 	// Some views move between windows for example the commitFiles view and when cycling through
@@ -213,6 +214,7 @@ type GuiRepoState struct {
 type Controllers struct {
 	Submodules   *controllers.SubmodulesController
 	LocalCommits *controllers.LocalCommitsController
+	Files        *controllers.FilesController
 }
 
 type listPanelState struct {
@@ -445,8 +447,8 @@ func (gui *Gui) resetState(filterPath string, reuseState bool) {
 			CherryPicking: cherrypicking.New(),
 			Diffing:       diffing.New(),
 		},
-		ViewContextMap:    contexts.initialViewContextMap(),
-		ViewTabContextMap: contexts.initialViewTabContextMap(),
+		ViewContextMap:    contexts.InitialViewContextMap(),
+		ViewTabContextMap: contexts.InitialViewTabContextMap(),
 		ScreenMode:        screenMode,
 		// TODO: put contexts in the context manager
 		ContextManager: NewContextManager(initialContext),
@@ -519,12 +521,15 @@ func NewGui(
 
 	authors.SetCustomAuthors(gui.UserConfig.Gui.AuthorColors)
 
+	gui.resetState(filterPath, false)
+
 	guiCommon := &guiCommon{gui: gui, IPopupHandler: gui.PopupHandler}
 	controllerCommon := &controllers.ControllerCommon{IGuiCommon: guiCommon, Common: cmn}
 
 	gui.Controllers = Controllers{
 		Submodules: controllers.NewSubmodulesController(
 			controllerCommon,
+			gui.State.Contexts.Submodules,
 			gui.Git,
 			gui.enterSubmodule,
 			gui.getSelectedSubmodule,
@@ -532,16 +537,33 @@ func NewGui(
 
 		LocalCommits: controllers.NewLocalCommitsController(
 			controllerCommon,
+			gui.State.Contexts.BranchCommits,
+			osCommand,
 			gui.Git,
 			gui.getSelectedLocalCommit,
 			func() []*models.Commit { return gui.State.Commits },
 			func() int { return gui.State.Panels.Commits.SelectedLineIdx },
 			gui.handleGenericMergeCommandResult,
 			gui.handlePullFiles,
+			gui.createTagMenu,
+			gui.getHostingServiceMgr,
+			gui.SwitchToCommitFilesContext,
+			gui.CheckoutRef,
+			gui.CreateGitResetMenu,
+			gui.handleOpenSearch,
+			func() bool { return gui.State.Panels.Commits.LimitCommits },
+			func(value bool) { gui.State.Panels.Commits.LimitCommits = value },
+			func() bool { return gui.ShowWholeGitGraph },
+			func(value bool) { gui.ShowWholeGitGraph = value },
+		),
+		Files: controllers.NewFilesController(
+			controllerCommon,
+			gui.State.Contexts.Files,
+			gui.Git,
+			gui.getSelectedFileNode,
+			gui.State.Contexts,
 		),
 	}
-
-	gui.resetState(filterPath, false)
 
 	return gui, nil
 }

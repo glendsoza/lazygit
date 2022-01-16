@@ -108,5 +108,5 @@ func (gui *Gui) handleCreateResetToRemoteBranchMenu() error {
 		return nil
 	}
 
-	return gui.createResetMenu(selectedBranch.FullName())
+	return gui.CreateGitResetMenu(selectedBranch.FullName())
 }

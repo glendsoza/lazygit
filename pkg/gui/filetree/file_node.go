@@ -2,6 +2,7 @@ package filetree
 
 import (
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
 type FileNode struct {
@@ -11,7 +12,7 @@ type FileNode struct {
 	CompressionLevel int    // equal to the number of forward slashes you'll see in the path when it's rendered in tree mode
 }
 
-// methods satisfying ListItem interface
+var _ types.ListItem = &FileNode{}
 
 func (s *FileNode) ID() string {
 	return s.GetPath()

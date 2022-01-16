@@ -4,6 +4,7 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/loaders"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/gui/popup"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
 // list panel functions
@@ -48,7 +49,7 @@ func (gui *Gui) handleCheckoutSubCommit() error {
 		Prompt: gui.Tr.SureCheckoutThisCommit,
 		HandleConfirm: func() error {
 			gui.LogAction(gui.Tr.Actions.CheckoutCommit)
-			return gui.handleCheckoutRef(commit.Sha, handleCheckoutRefOptions{})
+			return gui.CheckoutRef(commit.Sha, types.CheckoutRefOptions{})
 		},
 	})
 	if err != nil {
@@ -63,7 +64,7 @@ func (gui *Gui) handleCheckoutSubCommit() error {
 func (gui *Gui) handleCreateSubCommitResetMenu() error {
 	commit := gui.getSelectedSubCommit()
 
-	return gui.createResetMenu(commit.Sha)
+	return gui.CreateGitResetMenu(commit.Sha)
 }
 
 func (gui *Gui) handleViewSubCommitFiles() error {
@@ -72,7 +73,7 @@ func (gui *Gui) handleViewSubCommitFiles() error {
 		return nil
 	}
 
-	return gui.switchToCommitFilesContext(commit.Sha, false, gui.State.Contexts.SubCommits, "branches")
+	return gui.SwitchToCommitFilesContext(commit.Sha, false, gui.State.Contexts.SubCommits, "branches")
 }
 
 func (gui *Gui) switchToSubCommitsContext(refName string) error {

@@ -3,12 +3,13 @@ package gui
 import (
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/gui/popup"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
 // you can only copy from one context at a time, because the order and position of commits matter
 
-func (gui *Gui) resetCherryPickingIfNecessary(context Context) error {
-	oldContextKey := ContextKey(gui.State.Modes.CherryPicking.ContextKey)
+func (gui *Gui) resetCherryPickingIfNecessary(context types.Context) error {
+	oldContextKey := types.ContextKey(gui.State.Modes.CherryPicking.ContextKey)
 
 	if oldContextKey != context.GetKey() {
 		// need to reset the cherry picking mode
@@ -148,7 +149,7 @@ func (gui *Gui) HandlePasteCommits() error {
 }
 
 func (gui *Gui) exitCherryPickingMode() error {
-	contextKey := ContextKey(gui.State.Modes.CherryPicking.ContextKey)
+	contextKey := types.ContextKey(gui.State.Modes.CherryPicking.ContextKey)
 
 	gui.State.Modes.CherryPicking.ContextKey = ""
 	gui.State.Modes.CherryPicking.CherryPickedCommits = nil
@@ -161,7 +162,7 @@ func (gui *Gui) exitCherryPickingMode() error {
 	return gui.rerenderContextViewIfPresent(contextKey)
 }
 
-func (gui *Gui) rerenderContextViewIfPresent(contextKey ContextKey) error {
+func (gui *Gui) rerenderContextViewIfPresent(contextKey types.ContextKey) error {
 	if contextKey == "" {
 		return nil
 	}
@@ -176,7 +177,7 @@ func (gui *Gui) rerenderContextViewIfPresent(contextKey ContextKey) error {
 		return nil
 	}
 
-	if ContextKey(view.Context) == contextKey {
+	if types.ContextKey(view.Context) == contextKey {
 		if err := context.HandleRender(); err != nil {
 			return err
 		}

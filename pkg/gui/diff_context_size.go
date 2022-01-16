@@ -2,9 +2,11 @@ package gui
 
 import (
 	"errors"
+
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
-var CONTEXT_KEYS_SHOWING_DIFFS = []ContextKey{
+var CONTEXT_KEYS_SHOWING_DIFFS = []types.ContextKey{
 	FILES_CONTEXT_KEY,
 	COMMIT_FILES_CONTEXT_KEY,
 	STASH_CONTEXT_KEY,

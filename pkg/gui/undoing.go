@@ -108,7 +108,7 @@ func (gui *Gui) reflogUndo() error {
 			})
 		case CHECKOUT:
 			gui.LogAction(gui.Tr.Actions.Undo)
-			return true, gui.handleCheckoutRef(action.from, handleCheckoutRefOptions{
+			return true, gui.CheckoutRef(action.from, types.CheckoutRefOptions{
 				EnvVars:       undoEnvVars,
 				WaitingStatus: undoingStatus,
 			})
@@ -146,7 +146,7 @@ func (gui *Gui) reflogRedo() error {
 			})
 		case CHECKOUT:
 			gui.LogAction(gui.Tr.Actions.Redo)
-			return true, gui.handleCheckoutRef(action.to, handleCheckoutRefOptions{
+			return true, gui.CheckoutRef(action.to, types.CheckoutRefOptions{
 				EnvVars:       redoEnvVars,
 				WaitingStatus: redoingStatus,
 			})

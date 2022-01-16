@@ -104,14 +104,14 @@ func (gui *Gui) refreshFilesAndSubmodules() error {
 			gui.Log.Error(err)
 		}
 
-		if ContextKey(gui.Views.Files.Context) == FILES_CONTEXT_KEY {
+		if types.ContextKey(gui.Views.Files.Context) == FILES_CONTEXT_KEY {
 			// doing this a little custom (as opposed to using gui.postRefreshUpdate) because we handle selecting the file explicitly below
 			if err := gui.State.Contexts.Files.HandleRender(); err != nil {
 				return err
 			}
 		}
 
-		if gui.currentContext().GetKey() == FILES_CONTEXT_KEY || (gui.g.CurrentView() == gui.Views.Main && ContextKey(gui.g.CurrentView().Context) == MAIN_MERGING_CONTEXT_KEY) {
+		if gui.currentContext().GetKey() == FILES_CONTEXT_KEY || (gui.g.CurrentView() == gui.Views.Main && types.ContextKey(gui.g.CurrentView().Context) == MAIN_MERGING_CONTEXT_KEY) {
 			newSelectedPath := gui.getSelectedPath()
 			alreadySelected := selectedPath != "" && newSelectedPath == selectedPath
 			if !alreadySelected {
@@ -162,10 +162,10 @@ func (gui *Gui) stageSelectedFile() error {
 }
 
 func (gui *Gui) handleEnterFile() error {
-	return gui.enterFile(OnFocusOpts{ClickedViewName: "", ClickedViewLineIdx: -1})
+	return gui.enterFile(types.OnFocusOpts{ClickedViewName: "", ClickedViewLineIdx: -1})
 }
 
-func (gui *Gui) enterFile(opts OnFocusOpts) error {
+func (gui *Gui) enterFile(opts types.OnFocusOpts) error {
 	node := gui.getSelectedFileNode()
 	if node == nil {
 		return nil
@@ -191,58 +191,6 @@ func (gui *Gui) enterFile(opts OnFocusOpts) error {
 	}
 
 	return gui.pushContext(gui.State.Contexts.Staging, opts)
-}
-
-func (gui *Gui) handleFilePress() error {
-	node := gui.getSelectedFileNode()
-	if node == nil {
-		return nil
-	}
-
-	if node.IsLeaf() {
-		file := node.File
-
-		if file.HasInlineMergeConflicts {
-			return gui.switchToMerge()
-		}
-
-		if file.HasUnstagedChanges {
-			gui.LogAction(gui.Tr.Actions.StageFile)
-			if err := gui.Git.WorkingTree.StageFile(file.Name); err != nil {
-				return gui.PopupHandler.Error(err)
-			}
-		} else {
-			gui.LogAction(gui.Tr.Actions.UnstageFile)
-			if err := gui.Git.WorkingTree.UnStageFile(file.Names(), file.Tracked); err != nil {
-				return gui.PopupHandler.Error(err)
-			}
-		}
-	} else {
-		// if any files within have inline merge conflicts we can't stage or unstage,
-		// or it'll end up with those >>>>>> lines actually staged
-		if node.GetHasInlineMergeConflicts() {
-			return gui.PopupHandler.ErrorMsg(gui.Tr.ErrStageDirWithInlineMergeConflicts)
-		}
-
-		if node.GetHasUnstagedChanges() {
-			gui.LogAction(gui.Tr.Actions.StageFile)
-			if err := gui.Git.WorkingTree.StageFile(node.Path); err != nil {
-				return gui.PopupHandler.Error(err)
-			}
-		} else {
-			// pretty sure it doesn't matter that we're always passing true here
-			gui.LogAction(gui.Tr.Actions.UnstageFile)
-			if err := gui.Git.WorkingTree.UnStageFile([]string{node.Path}, true); err != nil {
-				return gui.PopupHandler.Error(err)
-			}
-		}
-	}
-
-	if err := gui.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}}); err != nil {
-		return err
-	}
-
-	return gui.State.Contexts.Files.HandleFocus()
 }
 
 func (gui *Gui) allFilesStaged() bool {
@@ -927,7 +875,7 @@ func (gui *Gui) handleStashChanges() error {
 }
 
 func (gui *Gui) handleCreateResetToUpstreamMenu() error {
-	return gui.createResetMenu("@{upstream}")
+	return gui.CreateGitResetMenu("@{upstream}")
 }
 
 func (gui *Gui) handleToggleDirCollapsed() error {
@@ -960,7 +908,7 @@ func (gui *Gui) handleToggleFileTreeView() error {
 		}
 	}
 
-	if ContextKey(gui.Views.Files.Context) == FILES_CONTEXT_KEY {
+	if types.ContextKey(gui.Views.Files.Context) == FILES_CONTEXT_KEY {
 		if err := gui.State.Contexts.Files.HandleRender(); err != nil {
 			return err
 		}

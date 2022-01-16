@@ -30,3 +30,7 @@ func (self *guiCommon) Refresh(opts types.RefreshOptions) error {
 func (self *guiCommon) RunSubprocessAndRefresh(cmdObj oscommands.ICmdObj) error {
 	return self.gui.runSubprocessWithSuspenseAndRefresh(cmdObj)
 }
+
+func (self *guiCommon) PushContext(context types.Context) error {
+	return self.gui.pushContext(context)
+}

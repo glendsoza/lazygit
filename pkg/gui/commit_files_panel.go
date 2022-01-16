@@ -203,10 +203,10 @@ func (gui *Gui) startPatchManager() error {
 }
 
 func (gui *Gui) handleEnterCommitFile() error {
-	return gui.enterCommitFile(OnFocusOpts{ClickedViewName: "", ClickedViewLineIdx: -1})
+	return gui.enterCommitFile(types.OnFocusOpts{ClickedViewName: "", ClickedViewLineIdx: -1})
 }
 
-func (gui *Gui) enterCommitFile(opts OnFocusOpts) error {
+func (gui *Gui) enterCommitFile(opts types.OnFocusOpts) error {
 	node := gui.getSelectedCommitFileNode()
 	if node == nil {
 		return nil
@@ -255,7 +255,7 @@ func (gui *Gui) handleToggleCommitFileDirCollapsed() error {
 	return nil
 }
 
-func (gui *Gui) switchToCommitFilesContext(refName string, canRebase bool, context Context, windowName string) error {
+func (gui *Gui) SwitchToCommitFilesContext(refName string, canRebase bool, context types.Context, windowName string) error {
 	// sometimes the commitFiles view is already shown in another window, so we need to ensure that window
 	// no longer considers the commitFiles view as its main view.
 	gui.resetWindowForView(gui.Views.CommitFiles)

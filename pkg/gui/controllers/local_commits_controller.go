@@ -3,7 +3,9 @@ package controllers
 import (
 	"fmt"
 
+	"github.com/jesseduffield/gocui"
 	"github.com/jesseduffield/lazygit/pkg/commands"
+	"github.com/jesseduffield/lazygit/pkg/commands/hosting_service"
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
 	"github.com/jesseduffield/lazygit/pkg/config"
@@ -12,35 +14,69 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
+type (
+	CheckoutRefFn                     func(refName string, opts types.CheckoutRefOptions) error
+	CreateGitResetMenuFn              func(refName string) error
+	SwitchToCommitFilesContextFn      func(refName string, canRebase bool, context types.Context, windowName string) error
+	CreateTagMenuFn                   func(commitSha string) error
+	GetHostingServiceMgrFn            func() *hosting_service.HostingServiceMgr
+	PullFilesFn                       func() error
+	HandleGenericMergeCommandResultFn func(error) error
+	OpenSearchFn                      func(viewName string) error
+)
+
 type LocalCommitsController struct {
 	// I've said publicly that I'm against single-letter variable names but in this
 	// case I would actually prefer a _zero_ letter variable name in the form of
 	// struct embedding, but Go does not allow hiding public fields in an embedded struct
 	// to the client
 	c                               *ControllerCommon
+	context                         types.IListContext
 	os                              *oscommands.OSCommand
 	git                             *commands.GitCommand
 	getSelectedLocalCommit          func() *models.Commit
 	getCommits                      func() []*models.Commit
 	getSelectedLocalCommitIdx       func() int
-	handleGenericMergeCommandResult func(error) error
-	pullFiles                       func() error
+	handleGenericMergeCommandResult HandleGenericMergeCommandResultFn
+	pullFiles                       PullFilesFn
+	createTagMenu                   CreateTagMenuFn
+	getHostingServiceMgr            GetHostingServiceMgrFn
+	switchToCommitFilesContext      SwitchToCommitFilesContextFn
+	checkoutRef                     CheckoutRefFn
+	createGitResetMenu              CreateGitResetMenuFn
+	openSearch                      OpenSearchFn
+	getLimitCommits                 func() bool
+	setLimitCommits                 func(bool)
+	getShowWholeGitGraph            func() bool
+	setShowWholeGitGraph            func(bool)
 }
 
-var _ IController = &LocalCommitsController{}
+var _ types.IController = &LocalCommitsController{}
 
 func NewLocalCommitsController(
 	c *ControllerCommon,
+	context types.IListContext,
 	os *oscommands.OSCommand,
 	git *commands.GitCommand,
 	getSelectedLocalCommit func() *models.Commit,
 	getCommits func() []*models.Commit,
 	getSelectedLocalCommitIdx func() int,
-	handleGenericMergeCommandResult func(error) error,
-	pullFiles func() error,
+	handleGenericMergeCommandResult HandleGenericMergeCommandResultFn,
+	pullFiles PullFilesFn,
+	createTagMenu CreateTagMenuFn,
+	getHostingServiceMgr GetHostingServiceMgrFn,
+	switchToCommitFilesContext SwitchToCommitFilesContextFn,
+	checkoutRef CheckoutRefFn,
+	createGitResetMenu CreateGitResetMenuFn,
+	openSearch OpenSearchFn,
+	getLimitCommits func() bool,
+	setLimitCommits func(bool),
+	getShowWholeGitGraph func() bool,
+	setShowWholeGitGraph func(bool),
 ) *LocalCommitsController {
 	return &LocalCommitsController{
 		c:                               c,
+		context:                         context,
 		os:                              os,
 		git:                             git,
 		getSelectedLocalCommit:          getSelectedLocalCommit,
@@ -48,6 +84,16 @@ func NewLocalCommitsController(
 		getSelectedLocalCommitIdx:       getSelectedLocalCommitIdx,
 		handleGenericMergeCommandResult: handleGenericMergeCommandResult,
 		pullFiles:                       pullFiles,
+		createTagMenu:                   createTagMenu,
+		getHostingServiceMgr:            getHostingServiceMgr,
+		switchToCommitFilesContext:      switchToCommitFilesContext,
+		checkoutRef:                     checkoutRef,
+		createGitResetMenu:              createGitResetMenu,
+		openSearch:                      openSearch,
+		getLimitCommits:                 getLimitCommits,
+		setLimitCommits:                 setLimitCommits,
+		getShowWholeGitGraph:            getShowWholeGitGraph,
+		setShowWholeGitGraph:            setShowWholeGitGraph,
 	}
 }
 
@@ -56,43 +102,136 @@ func (self *LocalCommitsController) Keybindings(
 	config config.KeybindingConfig,
 	guards types.KeybindingGuards,
 ) []*types.Binding {
-	return []*types.Binding{
+	outsideFilterModeBindings := []*types.Binding{
 		{
 			Key:         getKey(config.Commits.SquashDown),
-			Handler:     guards.OutsideFilterMode(self.squashDown),
+			Handler:     self.squashDown,
 			Description: self.c.Tr.LcSquashDown,
 		},
 		{
 			Key:         getKey(config.Commits.MarkCommitAsFixup),
-			Handler:     guards.OutsideFilterMode(self.fixup),
+			Handler:     self.fixup,
 			Description: self.c.Tr.LcFixupCommit,
 		},
 		{
 			Key:         getKey(config.Commits.RenameCommit),
-			Handler:     guards.OutsideFilterMode(self.reword),
+			Handler:     self.checkSelected(self.reword),
 			Description: self.c.Tr.LcRewordCommit,
 		},
 		{
 			Key:         getKey(config.Commits.RenameCommitWithEditor),
-			Handler:     guards.OutsideFilterMode(self.rewordEditor),
+			Handler:     self.rewordEditor,
 			Description: self.c.Tr.LcRenameCommitEditor,
 		},
 		{
 			Key:         getKey(config.Universal.Remove),
-			Handler:     guards.OutsideFilterMode(self.drop),
+			Handler:     self.drop,
 			Description: self.c.Tr.LcDeleteCommit,
 		},
 		{
 			Key:         getKey(config.Universal.Edit),
-			Handler:     guards.OutsideFilterMode(self.edit),
+			Handler:     self.edit,
 			Description: self.c.Tr.LcEditCommit,
 		},
 		{
 			Key:         getKey(config.Commits.PickCommit),
-			Handler:     guards.OutsideFilterMode(self.pick),
+			Handler:     self.pick,
 			Description: self.c.Tr.LcPickCommit,
 		},
+		{
+			Key:         getKey(config.Commits.CreateFixupCommit),
+			Handler:     self.checkSelected(self.handleCreateFixupCommit),
+			Description: self.c.Tr.LcCreateFixupCommit,
+		},
+		{
+			Key:         getKey(config.Commits.SquashAboveCommits),
+			Handler:     self.checkSelected(self.handleSquashAllAboveFixupCommits),
+			Description: self.c.Tr.LcSquashAboveCommits,
+		},
+		{
+			Key:         getKey(config.Commits.MoveDownCommit),
+			Handler:     self.handleCommitMoveDown,
+			Description: self.c.Tr.LcMoveDownCommit,
+		},
+		{
+			Key:         getKey(config.Commits.MoveUpCommit),
+			Handler:     self.handleCommitMoveUp,
+			Description: self.c.Tr.LcMoveUpCommit,
+		},
+		{
+			Key:         getKey(config.Commits.AmendToCommit),
+			Handler:     self.handleCommitAmendTo,
+			Description: self.c.Tr.LcAmendToCommit,
+		},
+		{
+			Key:         getKey(config.Commits.RevertCommit),
+			Handler:     self.checkSelected(self.handleCommitRevert),
+			Description: self.c.Tr.LcRevertCommit,
+		},
+		// overriding these navigation keybindings because we might need to load
+		// more commits on demand
+		{
+			Key:         getKey(config.Universal.StartSearch),
+			Handler:     func() error { return self.handleOpenSearch("commits") },
+			Description: self.c.Tr.LcStartSearch,
+			Tag:         "navigation",
+		},
+		{
+			Key:         getKey(config.Universal.GotoBottom),
+			Handler:     self.gotoBottom,
+			Description: self.c.Tr.LcGotoBottom,
+			Tag:         "navigation",
+		},
+		{
+			Key:     gocui.MouseLeft,
+			Handler: func() error { return self.context.HandleClick(self.checkSelected(self.enter)) },
+		},
 	}
+
+	for _, binding := range outsideFilterModeBindings {
+		binding.Handler = guards.OutsideFilterMode(binding.Handler)
+	}
+
+	bindings := append(outsideFilterModeBindings, []*types.Binding{
+		{
+			Key:         getKey(config.Commits.OpenLogMenu),
+			Handler:     self.handleOpenLogMenu,
+			Description: self.c.Tr.LcOpenLogMenu,
+			OpensMenu:   true,
+		},
+		{
+			Key:         getKey(config.Commits.ViewResetOptions),
+			Handler:     self.checkSelected(self.handleCreateCommitResetMenu),
+			Description: self.c.Tr.LcResetToThisCommit,
+		},
+		{
+			Key:         getKey(config.Universal.GoInto),
+			Handler:     self.checkSelected(self.enter),
+			Description: self.c.Tr.LcViewCommitFiles,
+		},
+		{
+			Key:         getKey(config.Commits.CheckoutCommit),
+			Handler:     self.checkSelected(self.handleCheckoutCommit),
+			Description: self.c.Tr.LcCheckoutCommit,
+		},
+		{
+			Key:         getKey(config.Commits.TagCommit),
+			Handler:     self.checkSelected(self.handleTagCommit),
+			Description: self.c.Tr.LcTagCommit,
+		},
+		{
+			Key:         getKey(config.Commits.CopyCommitMessageToClipboard),
+			Handler:     self.checkSelected(self.handleCopySelectedCommitMessageToClipboard),
+			Description: self.c.Tr.LcCopyCommitMessageToClipboard,
+		},
+		{
+			Key:         getKey(config.Commits.OpenInBrowser),
+			Handler:     self.checkSelected(self.handleOpenCommitInBrowser),
+			Description: self.c.Tr.LcOpenCommitInBrowser,
+		},
+	}...)
+
+	return append(bindings, self.context.Keybindings(getKey, config, guards)...)
 }
 
 func (self *LocalCommitsController) squashDown() error {
@@ -145,17 +284,12 @@ func (self *LocalCommitsController) fixup() error {
 	})
 }
 
-func (self *LocalCommitsController) reword() error {
+func (self *LocalCommitsController) reword(commit *models.Commit) error {
 	applied, err := self.handleMidRebaseCommand("reword")
 	if err != nil {
 		return err
 	}
 	if applied {
-		return nil
-	}
-
-	commit := self.getSelectedLocalCommit()
-	if commit == nil {
 		return nil
 	}
 
@@ -292,10 +426,11 @@ func (self *LocalCommitsController) handleMidRebaseCommand(action string) (bool,
 }
 
 func (self *LocalCommitsController) handleCommitMoveDown() error {
-	index := gui.State.Panels.Commits.SelectedLineIdx
-	selectedCommit := gui.State.Commits[index]
+	index := self.context.GetPanelState().GetSelectedLineIdx()
+	commits := self.getCommits()
+	selectedCommit := self.getCommits()[index]
 	if selectedCommit.Status == "rebasing" {
-		if gui.State.Commits[index+1].Status != "rebasing" {
+		if commits[index+1].Status != "rebasing" {
 			return nil
 		}
 
@@ -307,7 +442,7 @@ func (self *LocalCommitsController) handleCommitMoveDown() error {
 		if err := self.git.Rebase.MoveTodoDown(index); err != nil {
 			return self.c.Error(err)
 		}
-		gui.State.Panels.Commits.SelectedLineIdx++
+		self.context.HandleNextLine()
 		return self.c.Refresh(types.RefreshOptions{
 			Mode: types.SYNC, Scope: []types.RefreshableView{types.REBASE_COMMITS},
 		})
@@ -315,21 +450,21 @@ func (self *LocalCommitsController) handleCommitMoveDown() error {
 
 	return self.c.WithWaitingStatus(self.c.Tr.MovingStatus, func() error {
 		self.c.LogAction(self.c.Tr.Actions.MoveCommitDown)
-		err := self.git.Rebase.MoveCommitDown(gui.State.Commits, index)
+		err := self.git.Rebase.MoveCommitDown(self.getCommits(), index)
 		if err == nil {
-			gui.State.Panels.Commits.SelectedLineIdx++
+			self.context.HandleNextLine()
 		}
 		return self.handleGenericMergeCommandResult(err)
 	})
 }
 
 func (self *LocalCommitsController) handleCommitMoveUp() error {
-	index := gui.State.Panels.Commits.SelectedLineIdx
+	index := self.context.GetPanelState().GetSelectedLineIdx()
 	if index == 0 {
 		return nil
 	}
 
-	selectedCommit := gui.State.Commits[index]
+	selectedCommit := self.getCommits()[index]
 	if selectedCommit.Status == "rebasing" {
 		// logging directly here because MoveTodoDown doesn't have enough information
 		// to provide a useful log
@@ -342,7 +477,7 @@ func (self *LocalCommitsController) handleCommitMoveUp() error {
 		if err := self.git.Rebase.MoveTodoDown(index - 1); err != nil {
 			return self.c.Error(err)
 		}
-		gui.State.Panels.Commits.SelectedLineIdx--
+		self.context.HandlePrevLine()
 		return self.c.Refresh(types.RefreshOptions{
 			Mode: types.SYNC, Scope: []types.RefreshableView{types.REBASE_COMMITS},
 		})
@@ -350,9 +485,9 @@ func (self *LocalCommitsController) handleCommitMoveUp() error {
 
 	return self.c.WithWaitingStatus(self.c.Tr.MovingStatus, func() error {
 		self.c.LogAction(self.c.Tr.Actions.MoveCommitUp)
-		err := self.git.Rebase.MoveCommitDown(gui.State.Commits, index-1)
+		err := self.git.Rebase.MoveCommitDown(self.getCommits(), index-1)
 		if err == nil {
-			gui.State.Panels.Commits.SelectedLineIdx--
+			self.context.HandlePrevLine()
 		}
 		return self.handleGenericMergeCommandResult(err)
 	})
@@ -365,16 +500,14 @@ func (self *LocalCommitsController) handleCommitAmendTo() error {
 		HandleConfirm: func() error {
 			return self.c.WithWaitingStatus(self.c.Tr.AmendingStatus, func() error {
 				self.c.LogAction(self.c.Tr.Actions.AmendCommit)
-				err := self.git.Rebase.AmendTo(gui.State.Commits[gui.State.Panels.Commits.SelectedLineIdx].Sha)
+				err := self.git.Rebase.AmendTo(self.getSelectedLocalCommit().Sha)
 				return self.handleGenericMergeCommandResult(err)
 			})
 		},
 	})
 }
 
-func (self *LocalCommitsController) handleCommitRevert() error {
-	commit := self.getSelectedLocalCommit()
-
+func (self *LocalCommitsController) handleCommitRevert(commit *models.Commit) error {
 	if commit.IsMerge() {
 		return self.createRevertMergeCommitMenu(commit)
 	} else {
@@ -412,27 +545,17 @@ func (self *LocalCommitsController) createRevertMergeCommitMenu(commit *models.C
 }
 
 func (self *LocalCommitsController) afterRevertCommit() error {
-	gui.State.Panels.Commits.SelectedLineIdx++
+	self.context.HandleNextLine()
 	return self.c.Refresh(types.RefreshOptions{
 		Mode: types.BLOCK_UI, Scope: []types.RefreshableView{types.COMMITS, types.BRANCHES},
 	})
 }
 
-func (self *LocalCommitsController) handleViewCommitFiles() error {
-	commit := self.getSelectedLocalCommit()
-	if commit == nil {
-		return nil
-	}
-
-	return self.switchToCommitFilesContext(commit.Sha, true, gui.State.Contexts.BranchCommits, "commits")
+func (self *LocalCommitsController) enter(commit *models.Commit) error {
+	return self.switchToCommitFilesContext(commit.Sha, true, self.context, "commits")
 }
 
-func (self *LocalCommitsController) handleCreateFixupCommit() error {
-	commit := self.getSelectedLocalCommit()
-	if commit == nil {
-		return nil
-	}
-
+func (self *LocalCommitsController) handleCreateFixupCommit(commit *models.Commit) error {
 	prompt := utils.ResolvePlaceholderString(
 		self.c.Tr.SureCreateFixupCommit,
 		map[string]string{
@@ -454,12 +577,7 @@ func (self *LocalCommitsController) handleCreateFixupCommit() error {
 	})
 }
 
-func (self *LocalCommitsController) handleSquashAllAboveFixupCommits() error {
-	commit := self.getSelectedLocalCommit()
-	if commit == nil {
-		return nil
-	}
-
+func (self *LocalCommitsController) handleSquashAllAboveFixupCommits(commit *models.Commit) error {
 	prompt := utils.ResolvePlaceholderString(
 		self.c.Tr.SureSquashAboveCommits,
 		map[string]string{
@@ -480,134 +598,52 @@ func (self *LocalCommitsController) handleSquashAllAboveFixupCommits() error {
 	})
 }
 
-func (self *LocalCommitsController) handleTagCommit() error {
-	commit := self.getSelectedLocalCommit()
-	if commit == nil {
-		return nil
-	}
-
+func (self *LocalCommitsController) handleTagCommit(commit *models.Commit) error {
 	return self.createTagMenu(commit.Sha)
 }
 
-func (self *LocalCommitsController) createTagMenu(commitSha string) error {
-	return self.c.Menu(popup.CreateMenuOptions{
-		Title: self.c.Tr.TagMenuTitle,
-		Items: []*popup.MenuItem{
-			{
-				DisplayString: self.c.Tr.LcLightweightTag,
-				OnPress: func() error {
-					return self.handleCreateLightweightTag(commitSha)
-				},
-			},
-			{
-				DisplayString: self.c.Tr.LcAnnotatedTag,
-				OnPress: func() error {
-					return self.handleCreateAnnotatedTag(commitSha)
-				},
-			},
-		},
-	})
-}
-
-func (self *LocalCommitsController) afterTagCreate() error {
-	self.State.Panels.Tags.SelectedLineIdx = 0 // Set to the top
-	return self.c.Refresh(types.RefreshOptions{
-		Mode: types.ASYNC, Scope: []types.RefreshableView{types.COMMITS, types.TAGS},
-	})
-}
-
-func (self *LocalCommitsController) handleCreateAnnotatedTag(commitSha string) error {
-	return self.c.Prompt(popup.PromptOpts{
-		Title: self.c.Tr.TagNameTitle,
-		HandleConfirm: func(tagName string) error {
-			return self.c.Prompt(popup.PromptOpts{
-				Title: self.c.Tr.TagMessageTitle,
-				HandleConfirm: func(msg string) error {
-					self.c.LogAction(self.c.Tr.Actions.CreateAnnotatedTag)
-					if err := self.git.Tag.CreateAnnotated(tagName, commitSha, msg); err != nil {
-						return self.c.Error(err)
-					}
-					return self.afterTagCreate()
-				},
-			})
-		},
-	})
-}
-
-func (self *LocalCommitsController) handleCreateLightweightTag(commitSha string) error {
-	return self.c.Prompt(popup.PromptOpts{
-		Title: self.c.Tr.TagNameTitle,
-		HandleConfirm: func(tagName string) error {
-			self.c.LogAction(self.c.Tr.Actions.CreateLightweightTag)
-			if err := self.git.Tag.CreateLightweight(tagName, commitSha); err != nil {
-				return self.c.Error(err)
-			}
-			return self.afterTagCreate()
-		},
-	})
-}
-
-func (self *LocalCommitsController) handleCheckoutCommit() error {
-	commit := self.getSelectedLocalCommit()
-	if commit == nil {
-		return nil
-	}
-
+func (self *LocalCommitsController) handleCheckoutCommit(commit *models.Commit) error {
 	return self.c.Ask(popup.AskOpts{
 		Title:  self.c.Tr.LcCheckoutCommit,
 		Prompt: self.c.Tr.SureCheckoutThisCommit,
 		HandleConfirm: func() error {
 			self.c.LogAction(self.c.Tr.Actions.CheckoutCommit)
-			return self.handleCheckoutRef(commit.Sha, handleCheckoutRefOptions{})
+			return self.checkoutRef(commit.Sha, types.CheckoutRefOptions{})
 		},
 	})
 }
 
-func (self *LocalCommitsController) handleCreateCommitResetMenu() error {
-	commit := self.getSelectedLocalCommit()
-	if commit == nil {
-		return self.c.ErrorMsg(self.c.Tr.NoCommitsThisBranch)
-	}
-
-	return self.createResetMenu(commit.Sha)
+func (self *LocalCommitsController) handleCreateCommitResetMenu(commit *models.Commit) error {
+	return self.createGitResetMenu(commit.Sha)
 }
 
-func (self *LocalCommitsController) handleOpenSearchForCommitsPanel(string) error {
+func (self *LocalCommitsController) handleOpenSearch(string) error {
 	// we usually lazyload these commits but now that we're searching we need to load them now
-	if self.State.Panels.Commits.LimitCommits {
-		self.State.Panels.Commits.LimitCommits = false
+	if self.getLimitCommits() {
+		self.setLimitCommits(false)
 		if err := self.c.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.COMMITS}}); err != nil {
 			return err
 		}
 	}
 
-	return self.handleOpenSearch("commits")
+	return self.openSearch("commits")
 }
 
-func (self *LocalCommitsController) handleGotoBottomForCommitsPanel() error {
-	// we usually lazyload these commits but now that we're searching we need to load them now
-	if self.State.Panels.Commits.LimitCommits {
-		self.State.Panels.Commits.LimitCommits = false
+func (self *LocalCommitsController) gotoBottom() error {
+	// we usually lazyload these commits but now that we're jumping to the bottom we need to load them now
+	if self.getLimitCommits() {
+		self.setLimitCommits(false)
 		if err := self.c.Refresh(types.RefreshOptions{Mode: types.SYNC, Scope: []types.RefreshableView{types.COMMITS}}); err != nil {
 			return err
 		}
 	}
 
-	for _, context := range self.getListContexts() {
-		if context.GetViewName() == "commits" {
-			return context.handleGotoBottom()
-		}
-	}
+	self.context.HandleGotoBottom()
 
 	return nil
 }
 
-func (self *LocalCommitsController) handleCopySelectedCommitMessageToClipboard() error {
-	commit := self.getSelectedLocalCommit()
-	if commit == nil {
-		return nil
-	}
-
+func (self *LocalCommitsController) handleCopySelectedCommitMessageToClipboard(commit *models.Commit) error {
 	message, err := self.git.Commit.GetCommitMessage(commit.Sha)
 	if err != nil {
 		return self.c.Error(err)
@@ -630,10 +666,10 @@ func (self *LocalCommitsController) handleOpenLogMenu() error {
 			{
 				DisplayString: self.c.Tr.ToggleShowGitGraphAll,
 				OnPress: func() error {
-					self.ShowWholeGitGraph = !self.ShowWholeGitGraph
+					self.setShowWholeGitGraph(!self.getShowWholeGitGraph())
 
-					if self.ShowWholeGitGraph {
-						self.State.Panels.Commits.LimitCommits = false
+					if self.getShowWholeGitGraph() {
+						self.setLimitCommits(false)
 					}
 
 					return self.c.WithWaitingStatus(self.c.Tr.LcLoadingCommits, func() error {
@@ -706,12 +742,7 @@ func (self *LocalCommitsController) handleOpenLogMenu() error {
 	})
 }
 
-func (self *LocalCommitsController) handleOpenCommitInBrowser() error {
-	commit := self.getSelectedLocalCommit()
-	if commit == nil {
-		return nil
-	}
-
+func (self *LocalCommitsController) handleOpenCommitInBrowser(commit *models.Commit) error {
 	hostingServiceMgr := self.getHostingServiceMgr()
 
 	url, err := hostingServiceMgr.GetCommitURL(commit.Sha)
@@ -725,4 +756,19 @@ func (self *LocalCommitsController) handleOpenCommitInBrowser() error {
 	}
 
 	return nil
+}
+
+func (self *LocalCommitsController) checkSelected(callback func(*models.Commit) error) func() error {
+	return func() error {
+		commit := self.getSelectedLocalCommit()
+		if commit == nil {
+			return nil
+		}
+
+		return callback(commit)
+	}
+}
+
+func (self *LocalCommitsController) Context() types.Context {
+	return self.context
 }

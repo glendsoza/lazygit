@@ -9,70 +9,31 @@ import (
 )
 
 type ListContext struct {
-	GetItemsLength      func() int
-	GetDisplayStrings   func(startIdx int, length int) [][]string
-	OnFocus             func(...OnFocusOpts) error
-	OnRenderToMain      func(...OnFocusOpts) error
-	OnFocusLost         func() error
+	GetItemsLength    func() int
+	GetDisplayStrings func(startIdx int, length int) [][]string
+	OnFocus           func(...types.OnFocusOpts) error
+	OnRenderToMain    func(...types.OnFocusOpts) error
+	OnFocusLost       func() error
+	// TODO: remove
 	OnClickSelectedItem func() error
 
 	// the boolean here tells us whether the item is nil. This is needed because you can't work it out on the calling end once the pointer is wrapped in an interface (unless you want to use reflection)
-	SelectedItem    func() (ListItem, bool)
-	OnGetPanelState func() IListPanelState
+	SelectedItem    func() (types.ListItem, bool)
+	OnGetPanelState func() types.IListPanelState
 	// if this is true, we'll call GetDisplayStrings for just the visible part of the
 	// view and re-render that. This is useful when you need to render different
 	// content based on the selection (e.g. for showing the selected commit)
 	RenderSelection bool
-
-	GetNavigationKeybindingOverrides func(
-		getKey func(key string) interface{},
-		config config.KeybindingConfig,
-		guards types.KeybindingGuards,
-	) []*types.Binding
 
 	Gui *Gui
 
 	*BasicContext
 }
 
-type IListContext interface {
-	GetSelectedItem() (ListItem, bool)
-	GetSelectedItemId() string
+var _ types.IListContext = &ListContext{}
 
-	handlePrevLine() error
-	handleNextLine() error
-	handleScrollLeft() error
-	handleScrollRight() error
-	handleNextPage() error
-	handleGotoTop() error
-	handleGotoBottom() error
-	handlePrevPage() error
-	handleClick() error
-
-	onSearchSelect(selectedLineIdx int) error
-	FocusLine()
-	HandleRenderToMain() error
-
-	GetPanelState() IListPanelState
-
-	Context
-}
-
-func (self *ListContext) GetPanelState() IListPanelState {
+func (self *ListContext) GetPanelState() types.IListPanelState {
 	return self.OnGetPanelState()
-}
-
-type IListPanelState interface {
-	SetSelectedLineIdx(int)
-	GetSelectedLineIdx() int
-}
-
-type ListItem interface {
-	// ID is a SHA when the item is a commit, a filename when the item is a file, 'stash@{4}' when it's a stash entry, 'my_branch' when it's a branch
-	ID() string
-
-	// Description is something we would show in a message e.g. '123as14: push blah' for a commit
-	Description() string
 }
 
 func (self *ListContext) FocusLine() {
@@ -96,7 +57,7 @@ func formatListFooter(selectedLineIdx int, length int) string {
 	return fmt.Sprintf("%d of %d", selectedLineIdx+1, length)
 }
 
-func (self *ListContext) GetSelectedItem() (ListItem, bool) {
+func (self *ListContext) GetSelectedItem() (types.ListItem, bool) {
 	return self.SelectedItem()
 }
 
@@ -141,7 +102,7 @@ func (self *ListContext) HandleFocusLost() error {
 	return nil
 }
 
-func (self *ListContext) HandleFocus(opts ...OnFocusOpts) error {
+func (self *ListContext) HandleFocus(opts ...types.OnFocusOpts) error {
 	if self.Gui.popupPanelFocused() {
 		return nil
 	}
@@ -167,19 +128,19 @@ func (self *ListContext) HandleFocus(opts ...OnFocusOpts) error {
 	return nil
 }
 
-func (self *ListContext) handlePrevLine() error {
+func (self *ListContext) HandlePrevLine() error {
 	return self.handleLineChange(-1)
 }
 
-func (self *ListContext) handleNextLine() error {
+func (self *ListContext) HandleNextLine() error {
 	return self.handleLineChange(1)
 }
 
-func (self *ListContext) handleScrollLeft() error {
+func (self *ListContext) HandleScrollLeft() error {
 	return self.scroll(self.Gui.scrollLeft)
 }
 
-func (self *ListContext) handleScrollRight() error {
+func (self *ListContext) HandleScrollRight() error {
 	return self.scroll(self.Gui.scrollRight)
 }
 
@@ -218,7 +179,7 @@ func (self *ListContext) handleLineChange(change int) error {
 	return self.HandleFocus()
 }
 
-func (self *ListContext) handleNextPage() error {
+func (self *ListContext) HandleNextPage() error {
 	view, err := self.Gui.g.View(self.ViewName)
 	if err != nil {
 		return nil
@@ -228,15 +189,15 @@ func (self *ListContext) handleNextPage() error {
 	return self.handleLineChange(delta)
 }
 
-func (self *ListContext) handleGotoTop() error {
+func (self *ListContext) HandleGotoTop() error {
 	return self.handleLineChange(-self.GetItemsLength())
 }
 
-func (self *ListContext) handleGotoBottom() error {
+func (self *ListContext) HandleGotoBottom() error {
 	return self.handleLineChange(self.GetItemsLength())
 }
 
-func (self *ListContext) handlePrevPage() error {
+func (self *ListContext) HandlePrevPage() error {
 	view, err := self.Gui.g.View(self.ViewName)
 	if err != nil {
 		return nil
@@ -247,7 +208,7 @@ func (self *ListContext) handlePrevPage() error {
 	return self.handleLineChange(-delta)
 }
 
-func (self *ListContext) handleClick() error {
+func (self *ListContext) HandleClick(onClick func() error) error {
 	if self.ignoreKeybinding() {
 		return nil
 	}
@@ -272,13 +233,13 @@ func (self *ListContext) handleClick() error {
 	self.GetPanelState().SetSelectedLineIdx(newSelectedLineIdx)
 
 	prevViewName := self.Gui.currentViewName()
-	if prevSelectedLineIdx == newSelectedLineIdx && prevViewName == self.ViewName && self.OnClickSelectedItem != nil {
-		return self.OnClickSelectedItem()
+	if prevSelectedLineIdx == newSelectedLineIdx && prevViewName == self.ViewName && onClick != nil {
+		return onClick()
 	}
 	return self.HandleFocus()
 }
 
-func (self *ListContext) onSearchSelect(selectedLineIdx int) error {
+func (self *ListContext) OnSearchSelect(selectedLineIdx int) error {
 	self.GetPanelState().SetSelectedLineIdx(selectedLineIdx)
 	return self.HandleFocus()
 }
@@ -296,26 +257,19 @@ func (self *ListContext) Keybindings(
 	config config.KeybindingConfig,
 	guards types.KeybindingGuards,
 ) []*types.Binding {
-	bindings := self.BasicContext.Keybindings(getKey, config, guards)
-
-	if self.GetNavigationKeybindingOverrides != nil {
-		// keybindings are processed from top to bottom so we add these ones before adding the defaults
-		bindings = append(bindings, self.GetNavigationKeybindingOverrides(getKey, config, guards)...)
-	}
-
-	bindings = append(bindings, []*types.Binding{
-		{Tag: "navigation", Key: getKey(config.Universal.PrevItemAlt), Modifier: gocui.ModNone, Handler: self.handlePrevLine},
-		{Tag: "navigation", Key: getKey(config.Universal.PrevItem), Modifier: gocui.ModNone, Handler: self.handlePrevLine},
-		{Tag: "navigation", Key: gocui.MouseWheelUp, Modifier: gocui.ModNone, Handler: self.handlePrevLine},
-		{Tag: "navigation", Key: getKey(config.Universal.NextItemAlt), Modifier: gocui.ModNone, Handler: self.handleNextLine},
-		{Tag: "navigation", Key: getKey(config.Universal.NextItem), Modifier: gocui.ModNone, Handler: self.handleNextLine},
-		{Tag: "navigation", Key: getKey(config.Universal.PrevPage), Modifier: gocui.ModNone, Handler: self.handlePrevPage, Description: self.Gui.Tr.LcPrevPage},
-		{Tag: "navigation", Key: getKey(config.Universal.NextPage), Modifier: gocui.ModNone, Handler: self.handleNextPage, Description: self.Gui.Tr.LcNextPage},
-		{Tag: "navigation", Key: getKey(config.Universal.GotoTop), Modifier: gocui.ModNone, Handler: self.handleGotoTop, Description: self.Gui.Tr.LcGotoTop},
-		{Tag: "navigation", Key: gocui.MouseWheelDown, Modifier: gocui.ModNone, Handler: self.handleNextLine},
-		{Key: gocui.MouseLeft, Modifier: gocui.ModNone, Handler: self.handleClick},
-		{Tag: "navigation", Key: getKey(config.Universal.ScrollLeft), Modifier: gocui.ModNone, Handler: self.handleScrollLeft},
-		{Tag: "navigation", Key: getKey(config.Universal.ScrollRight), Modifier: gocui.ModNone, Handler: self.handleScrollRight},
+	return []*types.Binding{
+		{Tag: "navigation", Key: getKey(config.Universal.PrevItemAlt), Modifier: gocui.ModNone, Handler: self.HandlePrevLine},
+		{Tag: "navigation", Key: getKey(config.Universal.PrevItem), Modifier: gocui.ModNone, Handler: self.HandlePrevLine},
+		{Tag: "navigation", Key: gocui.MouseWheelUp, Modifier: gocui.ModNone, Handler: self.HandlePrevLine},
+		{Tag: "navigation", Key: getKey(config.Universal.NextItemAlt), Modifier: gocui.ModNone, Handler: self.HandleNextLine},
+		{Tag: "navigation", Key: getKey(config.Universal.NextItem), Modifier: gocui.ModNone, Handler: self.HandleNextLine},
+		{Tag: "navigation", Key: getKey(config.Universal.PrevPage), Modifier: gocui.ModNone, Handler: self.HandlePrevPage, Description: self.Gui.Tr.LcPrevPage},
+		{Tag: "navigation", Key: getKey(config.Universal.NextPage), Modifier: gocui.ModNone, Handler: self.HandleNextPage, Description: self.Gui.Tr.LcNextPage},
+		{Tag: "navigation", Key: getKey(config.Universal.GotoTop), Modifier: gocui.ModNone, Handler: self.HandleGotoTop, Description: self.Gui.Tr.LcGotoTop},
+		{Key: gocui.MouseLeft, Modifier: gocui.ModNone, Handler: func() error { return self.HandleClick(nil) }},
+		{Tag: "navigation", Key: gocui.MouseWheelDown, Modifier: gocui.ModNone, Handler: self.HandleNextLine},
+		{Tag: "navigation", Key: getKey(config.Universal.ScrollLeft), Modifier: gocui.ModNone, Handler: self.HandleScrollLeft},
+		{Tag: "navigation", Key: getKey(config.Universal.ScrollRight), Modifier: gocui.ModNone, Handler: self.HandleScrollRight},
 		{
 			Key:         getKey(config.Universal.StartSearch),
 			Handler:     func() error { return self.Gui.handleOpenSearch(self.GetViewName()) },
@@ -324,11 +278,8 @@ func (self *ListContext) Keybindings(
 		},
 		{
 			Key:         getKey(config.Universal.GotoBottom),
-			Handler:     self.handleGotoBottom,
 			Description: self.Gui.Tr.LcGotoBottom,
 			Tag:         "navigation",
 		},
-	}...)
-
-	return bindings
+	}
 }

@@ -146,5 +146,5 @@ func (gui *Gui) handleViewStashFiles() error {
 		return nil
 	}
 
-	return gui.switchToCommitFilesContext(stashEntry.RefName(), false, gui.State.Contexts.Stash, "stash")
+	return gui.SwitchToCommitFilesContext(stashEntry.RefName(), false, gui.State.Contexts.Stash, "stash")
 }

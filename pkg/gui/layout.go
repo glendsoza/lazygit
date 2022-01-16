@@ -2,6 +2,7 @@ package gui
 
 import (
 	"github.com/jesseduffield/gocui"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 	"github.com/jesseduffield/lazygit/pkg/theme"
 )
 
@@ -262,7 +263,7 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 		}
 
 		// ignore contexts whose view is owned by another context right now
-		if ContextKey(view.Context) != listContext.GetKey() {
+		if types.ContextKey(view.Context) != listContext.GetKey() {
 			continue
 		}
 
@@ -271,7 +272,7 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 		view.SelBgColor = theme.GocuiSelectedLineBgColor
 
 		// I doubt this is expensive though it's admittedly redundant after the first render
-		view.SetOnSelectItem(gui.onSelectItemWrapper(listContext.onSearchSelect))
+		view.SetOnSelectItem(gui.onSelectItemWrapper(listContext.OnSearchSelect))
 	}
 
 	gui.Views.Main.SetOnSelectItem(gui.onSelectItemWrapper(gui.handlelineByLineNavigateTo))

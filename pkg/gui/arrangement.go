@@ -2,6 +2,7 @@ package gui
 
 import (
 	"github.com/jesseduffield/lazygit/pkg/gui/boxlayout"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 	"github.com/jesseduffield/lazygit/pkg/utils"
 )
 
@@ -320,7 +321,7 @@ func (gui *Gui) currentSideWindowName() string {
 		reversedIdx := len(gui.State.ContextManager.ContextStack) - 1 - idx
 		context := gui.State.ContextManager.ContextStack[reversedIdx]
 
-		if context.GetKind() == SIDE_CONTEXT {
+		if context.GetKind() == types.SIDE_CONTEXT {
 			return context.GetWindowName()
 		}
 	}

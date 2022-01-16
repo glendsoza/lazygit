@@ -66,7 +66,7 @@ func (gui *Gui) withSelectedTag(f func(tag *models.Tag) error) func() error {
 
 func (gui *Gui) handleCheckoutTag(tag *models.Tag) error {
 	gui.LogAction(gui.Tr.Actions.CheckoutTag)
-	if err := gui.handleCheckoutRef(tag.Name, handleCheckoutRefOptions{}); err != nil {
+	if err := gui.CheckoutRef(tag.Name, types.CheckoutRefOptions{}); err != nil {
 		return err
 	}
 	return gui.pushContext(gui.State.Contexts.Branches)
@@ -120,5 +120,63 @@ func (gui *Gui) handlePushTag(tag *models.Tag) error {
 }
 
 func (gui *Gui) handleCreateResetToTagMenu(tag *models.Tag) error {
-	return gui.createResetMenu(tag.Name)
+	return gui.CreateGitResetMenu(tag.Name)
+}
+
+func (gui *Gui) createTagMenu(commitSha string) error {
+	return gui.PopupHandler.Menu(popup.CreateMenuOptions{
+		Title: gui.Tr.TagMenuTitle,
+		Items: []*popup.MenuItem{
+			{
+				DisplayString: gui.Tr.LcLightweightTag,
+				OnPress: func() error {
+					return gui.handleCreateLightweightTag(commitSha)
+				},
+			},
+			{
+				DisplayString: gui.Tr.LcAnnotatedTag,
+				OnPress: func() error {
+					return gui.handleCreateAnnotatedTag(commitSha)
+				},
+			},
+		},
+	})
+}
+
+func (gui *Gui) afterTagCreate() error {
+	gui.State.Panels.Tags.SelectedLineIdx = 0 // Set to the top
+	return gui.Refresh(types.RefreshOptions{
+		Mode: types.ASYNC, Scope: []types.RefreshableView{types.COMMITS, types.TAGS},
+	})
+}
+
+func (gui *Gui) handleCreateAnnotatedTag(commitSha string) error {
+	return gui.PopupHandler.Prompt(popup.PromptOpts{
+		Title: gui.Tr.TagNameTitle,
+		HandleConfirm: func(tagName string) error {
+			return gui.PopupHandler.Prompt(popup.PromptOpts{
+				Title: gui.Tr.TagMessageTitle,
+				HandleConfirm: func(msg string) error {
+					gui.LogAction(gui.Tr.Actions.CreateAnnotatedTag)
+					if err := gui.Git.Tag.CreateAnnotated(tagName, commitSha, msg); err != nil {
+						return gui.PopupHandler.Error(err)
+					}
+					return gui.afterTagCreate()
+				},
+			})
+		},
+	})
+}
+
+func (gui *Gui) handleCreateLightweightTag(commitSha string) error {
+	return gui.PopupHandler.Prompt(popup.PromptOpts{
+		Title: gui.Tr.TagNameTitle,
+		HandleConfirm: func(tagName string) error {
+			gui.LogAction(gui.Tr.Actions.CreateLightweightTag)
+			if err := gui.Git.Tag.CreateLightweight(tagName, commitSha); err != nil {
+				return gui.PopupHandler.Error(err)
+			}
+			return gui.afterTagCreate()
+		},
+	})
 }

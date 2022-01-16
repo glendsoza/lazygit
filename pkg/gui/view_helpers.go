@@ -218,7 +218,7 @@ func (gui *Gui) resizePopupPanel(v *gocui.View, content string) error {
 	return err
 }
 
-func (gui *Gui) changeSelectedLine(panelState IListPanelState, total int, change int) {
+func (gui *Gui) changeSelectedLine(panelState types.IListPanelState, total int, change int) {
 	// TODO: find out why we're doing this
 	line := panelState.GetSelectedLineIdx()
 
@@ -237,7 +237,7 @@ func (gui *Gui) changeSelectedLine(panelState IListPanelState, total int, change
 	panelState.SetSelectedLineIdx(newLine)
 }
 
-func (gui *Gui) refreshSelectedLine(panelState IListPanelState, total int) {
+func (gui *Gui) refreshSelectedLine(panelState types.IListPanelState, total int) {
 	line := panelState.GetSelectedLineIdx()
 
 	if line == -1 && total > 0 {
@@ -286,7 +286,7 @@ func (gui *Gui) secondaryViewFocused() bool {
 }
 
 func (gui *Gui) onViewTabClick(viewName string, tabIndex int) error {
-	context := gui.State.ViewTabContextMap[viewName][tabIndex].contexts[0]
+	context := gui.State.ViewTabContextMap[viewName][tabIndex].Contexts[0]
 
 	return gui.pushContext(context)
 }

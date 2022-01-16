@@ -87,7 +87,7 @@ func (gui *Gui) handleBranchPress() error {
 	}
 	branch := gui.getSelectedBranch()
 	gui.LogAction(gui.Tr.Actions.CheckoutBranch)
-	return gui.handleCheckoutRef(branch.Name, handleCheckoutRefOptions{})
+	return gui.CheckoutRef(branch.Name, types.CheckoutRefOptions{})
 }
 
 func (gui *Gui) handleCreatePullRequestPress() error {
@@ -157,79 +157,14 @@ func (gui *Gui) handleForceCheckout() error {
 	})
 }
 
-type handleCheckoutRefOptions struct {
-	WaitingStatus string
-	EnvVars       []string
-	onRefNotFound func(ref string) error
-}
-
-func (gui *Gui) handleCheckoutRef(ref string, options handleCheckoutRefOptions) error {
-	waitingStatus := options.WaitingStatus
-	if waitingStatus == "" {
-		waitingStatus = gui.Tr.CheckingOutStatus
-	}
-
-	cmdOptions := git_commands.CheckoutOptions{Force: false, EnvVars: options.EnvVars}
-
-	onSuccess := func() {
-		gui.State.Panels.Branches.SelectedLineIdx = 0
-		gui.State.Panels.Commits.SelectedLineIdx = 0
-		// loading a heap of commits is slow so we limit them whenever doing a reset
-		gui.State.Panels.Commits.LimitCommits = true
-	}
-
-	return gui.PopupHandler.WithWaitingStatus(waitingStatus, func() error {
-		if err := gui.Git.Branch.Checkout(ref, cmdOptions); err != nil {
-			// note, this will only work for english-language git commands. If we force git to use english, and the error isn't this one, then the user will receive an english command they may not understand. I'm not sure what the best solution to this is. Running the command once in english and a second time in the native language is one option
-
-			if options.onRefNotFound != nil && strings.Contains(err.Error(), "did not match any file(s) known to git") {
-				return options.onRefNotFound(ref)
-			}
-
-			if strings.Contains(err.Error(), "Please commit your changes or stash them before you switch branch") {
-				// offer to autostash changes
-				return gui.PopupHandler.Ask(popup.AskOpts{
-
-					Title:  gui.Tr.AutoStashTitle,
-					Prompt: gui.Tr.AutoStashPrompt,
-					HandleConfirm: func() error {
-						if err := gui.Git.Stash.Save(gui.Tr.StashPrefix + ref); err != nil {
-							return gui.PopupHandler.Error(err)
-						}
-						if err := gui.Git.Branch.Checkout(ref, cmdOptions); err != nil {
-							return gui.PopupHandler.Error(err)
-						}
-
-						onSuccess()
-						if err := gui.Git.Stash.Pop(0); err != nil {
-							if err := gui.Refresh(types.RefreshOptions{Mode: types.BLOCK_UI}); err != nil {
-								return err
-							}
-							return gui.PopupHandler.Error(err)
-						}
-						return gui.Refresh(types.RefreshOptions{Mode: types.BLOCK_UI})
-					},
-				})
-			}
-
-			if err := gui.PopupHandler.Error(err); err != nil {
-				return err
-			}
-		}
-		onSuccess()
-
-		return gui.Refresh(types.RefreshOptions{Mode: types.BLOCK_UI})
-	})
-}
-
 func (gui *Gui) handleCheckoutByName() error {
 	return gui.PopupHandler.Prompt(popup.PromptOpts{
 		Title:               gui.Tr.BranchName + ":",
 		FindSuggestionsFunc: gui.getRefsSuggestionsFunc(),
 		HandleConfirm: func(response string) error {
 			gui.LogAction("Checkout branch")
-			return gui.handleCheckoutRef(response, handleCheckoutRefOptions{
-				onRefNotFound: func(ref string) error {
+			return gui.CheckoutRef(response, types.CheckoutRefOptions{
+				OnRefNotFound: func(ref string) error {
 					return gui.PopupHandler.Ask(popup.AskOpts{
 						Title:  gui.Tr.BranchNotFoundTitle,
 						Prompt: fmt.Sprintf("%s %s%s", gui.Tr.BranchNotFoundPrompt, ref, "?"),
@@ -422,7 +357,7 @@ func (gui *Gui) handleCreateResetToBranchMenu() error {
 		return nil
 	}
 
-	return gui.createResetMenu(branch.Name)
+	return gui.CreateGitResetMenu(branch.Name)
 }
 
 func (gui *Gui) handleRenameBranch() error {

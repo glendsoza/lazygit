@@ -403,13 +403,6 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 		{
 			ViewName:    "files",
 			Contexts:    []string{string(FILES_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Universal.Select),
-			Handler:     gui.handleFilePress,
-			Description: gui.Tr.LcToggleStaged,
-		},
-		{
-			ViewName:    "files",
-			Contexts:    []string{string(FILES_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Universal.Remove),
 			Handler:     gui.handleCreateDiscardMenu,
 			Description: gui.Tr.LcViewDiscardOptions,
@@ -712,63 +705,6 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.OpenLogMenu),
-			Handler:     gui.handleOpenLogMenu,
-			Description: gui.Tr.LcOpenLogMenu,
-			OpensMenu:   true,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.ViewResetOptions),
-			Handler:     gui.handleCreateCommitResetMenu,
-			Description: gui.Tr.LcResetToThisCommit,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.CreateFixupCommit),
-			Handler:     guards.OutsideFilterMode(gui.handleCreateFixupCommit),
-			Description: gui.Tr.LcCreateFixupCommit,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.SquashAboveCommits),
-			Handler:     guards.OutsideFilterMode(gui.handleSquashAllAboveFixupCommits),
-			Description: gui.Tr.LcSquashAboveCommits,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.MoveDownCommit),
-			Handler:     guards.OutsideFilterMode(gui.handleCommitMoveDown),
-			Description: gui.Tr.LcMoveDownCommit,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.MoveUpCommit),
-			Handler:     guards.OutsideFilterMode(gui.handleCommitMoveUp),
-			Description: gui.Tr.LcMoveUpCommit,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.AmendToCommit),
-			Handler:     guards.OutsideFilterMode(gui.handleCommitAmendTo),
-			Description: gui.Tr.LcAmendToCommit,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.RevertCommit),
-			Handler:     guards.OutsideFilterMode(gui.handleCommitRevert),
-			Description: gui.Tr.LcRevertCommit,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.CherryPickCopy),
 			Handler:     gui.handleCopyCommit,
 			Description: gui.Tr.LcCherryPickCopy,
@@ -797,20 +733,6 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Universal.GoInto),
-			Handler:     gui.handleViewCommitFiles,
-			Description: gui.Tr.LcViewCommitFiles,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.CheckoutCommit),
-			Handler:     gui.handleCheckoutCommit,
-			Description: gui.Tr.LcCheckoutCommit,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Universal.New),
 			Modifier:    gocui.ModNone,
 			Handler:     gui.handleNewBranchOffCurrentItem,
@@ -819,30 +741,9 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 		{
 			ViewName:    "commits",
 			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.TagCommit),
-			Handler:     gui.handleTagCommit,
-			Description: gui.Tr.LcTagCommit,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Commits.ResetCherryPick),
 			Handler:     gui.exitCherryPickingMode,
 			Description: gui.Tr.LcResetCherryPick,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.CopyCommitMessageToClipboard),
-			Handler:     gui.handleCopySelectedCommitMessageToClipboard,
-			Description: gui.Tr.LcCopyCommitMessageToClipboard,
-		},
-		{
-			ViewName:    "commits",
-			Contexts:    []string{string(BRANCH_COMMITS_CONTEXT_KEY)},
-			Key:         gui.getKey(config.Commits.OpenInBrowser),
-			Handler:     gui.handleOpenCommitInBrowser,
-			Description: gui.Tr.LcOpenCommitInBrowser,
 		},
 		{
 			ViewName:    "commits",
@@ -855,7 +756,7 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 			ViewName:    "commits",
 			Contexts:    []string{string(REFLOG_COMMITS_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Universal.Select),
-			Handler:     gui.handleCheckoutReflogCommit,
+			Handler:     gui.CheckoutReflogCommit,
 			Description: gui.Tr.LcCheckoutCommit,
 		},
 		{
@@ -1732,11 +1633,39 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 		},
 	}
 
-	for _, context := range gui.allContexts() {
+	for _, controller := range []types.IController{
+		gui.Controllers.LocalCommits,
+		gui.Controllers.Submodules,
+		gui.Controllers.Files,
+	} {
+		context := controller.Context()
 		viewName := context.GetViewName()
 		contextKey := context.GetKey()
 
-		for _, binding := range context.Keybindings(gui.getKey, config, guards) {
+		for _, binding := range controller.Keybindings(gui.getKey, config, guards) {
+			binding.Contexts = []string{string(contextKey)}
+			binding.ViewName = viewName
+			bindings = append(bindings, binding)
+		}
+	}
+
+	// while migrating we'll continue providing keybindings from the list contexts themselves.
+	// for each controller we add above we need to remove the corresponding list context from here.
+	for _, listContext := range []types.IListContext{
+		gui.State.Contexts.Menu,
+		gui.State.Contexts.Branches,
+		gui.State.Contexts.Remotes,
+		gui.State.Contexts.RemoteBranches,
+		gui.State.Contexts.Tags,
+		gui.State.Contexts.ReflogCommits,
+		gui.State.Contexts.SubCommits,
+		gui.State.Contexts.Stash,
+		gui.State.Contexts.CommitFiles,
+		gui.State.Contexts.Suggestions,
+	} {
+		viewName := listContext.GetViewName()
+		contextKey := listContext.GetKey()
+		for _, binding := range listContext.Keybindings(gui.getKey, config, guards) {
 			binding.Contexts = []string{string(contextKey)}
 			binding.ViewName = viewName
 			bindings = append(bindings, binding)
@@ -1769,7 +1698,7 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 		}
 	}
 
-	for viewName := range gui.State.Contexts.initialViewTabContextMap() {
+	for viewName := range gui.State.Contexts.InitialViewTabContextMap() {
 		bindings = append(bindings, []*types.Binding{
 			{
 				ViewName:    viewName,
@@ -1802,7 +1731,7 @@ func (gui *Gui) keybindings() error {
 		}
 	}
 
-	for viewName := range gui.State.Contexts.initialViewTabContextMap() {
+	for viewName := range gui.State.Contexts.InitialViewTabContextMap() {
 		viewName := viewName
 		tabClickCallback := func(tabIndex int) error { return gui.onViewTabClick(viewName, tabIndex) }
 

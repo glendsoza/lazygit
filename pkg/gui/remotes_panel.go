@@ -59,7 +59,7 @@ func (gui *Gui) refreshRemotes() error {
 		}
 	}
 
-	return gui.postRefreshUpdate(gui.mustContextForContextKey(ContextKey(gui.Views.Branches.Context)))
+	return gui.postRefreshUpdate(gui.mustContextForContextKey(types.ContextKey(gui.Views.Branches.Context)))
 }
 
 func (gui *Gui) handleRemoteEnter() error {

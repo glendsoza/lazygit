@@ -13,4 +13,5 @@ type IGuiCommon interface {
 	LogCommand(cmdStr string, isCommandLine bool)
 	Refresh(types.RefreshOptions) error
 	RunSubprocessAndRefresh(oscommands.ICmdObj) error
+	PushContext(context types.Context) error
 }

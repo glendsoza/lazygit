@@ -3,6 +3,7 @@ package gui
 import (
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/gui/popup"
+	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
 // list panel functions
@@ -82,7 +83,7 @@ func (gui *Gui) refreshReflogCommits() error {
 	return gui.postRefreshUpdate(gui.State.Contexts.ReflogCommits)
 }
 
-func (gui *Gui) handleCheckoutReflogCommit() error {
+func (gui *Gui) CheckoutReflogCommit() error {
 	commit := gui.getSelectedReflogCommit()
 	if commit == nil {
 		return nil
@@ -93,7 +94,7 @@ func (gui *Gui) handleCheckoutReflogCommit() error {
 		Prompt: gui.Tr.SureCheckoutThisCommit,
 		HandleConfirm: func() error {
 			gui.LogAction(gui.Tr.Actions.CheckoutReflogCommit)
-			return gui.handleCheckoutRef(commit.Sha, handleCheckoutRefOptions{})
+			return gui.CheckoutRef(commit.Sha, types.CheckoutRefOptions{})
 		},
 	})
 	if err != nil {
@@ -108,7 +109,7 @@ func (gui *Gui) handleCheckoutReflogCommit() error {
 func (gui *Gui) handleCreateReflogResetMenu() error {
 	commit := gui.getSelectedReflogCommit()
 
-	return gui.createResetMenu(commit.Sha)
+	return gui.CreateGitResetMenu(commit.Sha)
 }
 
 func (gui *Gui) handleViewReflogCommitFiles() error {
@@ -117,5 +118,5 @@ func (gui *Gui) handleViewReflogCommitFiles() error {
 		return nil
 	}
 
-	return gui.switchToCommitFilesContext(commit.Sha, false, gui.State.Contexts.ReflogCommits, "commits")
+	return gui.SwitchToCommitFilesContext(commit.Sha, false, gui.State.Contexts.ReflogCommits, "commits")
 }
