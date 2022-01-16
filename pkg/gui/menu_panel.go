@@ -69,15 +69,10 @@ func (gui *Gui) createMenu(opts popup.CreateMenuOptions) error {
 	return gui.pushContext(gui.State.Contexts.Menu)
 }
 
-func (gui *Gui) onMenuPress() error {
-	selectedLine := gui.State.Panels.Menu.SelectedLineIdx
-	if err := gui.returnFromContext(); err != nil {
-		return err
+func (gui *Gui) getSelectedMenuItem() *popup.MenuItem {
+	if len(gui.State.MenuItems) == 0 {
+		return nil
 	}
 
-	if err := gui.State.MenuItems[selectedLine].OnPress(); err != nil {
-		return err
-	}
-
-	return nil
+	return gui.State.MenuItems[gui.State.Panels.Menu.SelectedLineIdx]
 }

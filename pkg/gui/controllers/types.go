@@ -14,4 +14,5 @@ type IGuiCommon interface {
 	Refresh(types.RefreshOptions) error
 	RunSubprocessAndRefresh(oscommands.ICmdObj) error
 	PushContext(context types.Context) error
+	PopContext() error
 }

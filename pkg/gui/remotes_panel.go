@@ -62,24 +62,6 @@ func (gui *Gui) refreshRemotes() error {
 	return gui.postRefreshUpdate(gui.mustContextForContextKey(types.ContextKey(gui.Views.Branches.Context)))
 }
 
-func (gui *Gui) handleRemoteEnter() error {
-	// naive implementation: get the branches and render them to the list, change the context
-	remote := gui.getSelectedRemote()
-	if remote == nil {
-		return nil
-	}
-
-	gui.State.RemoteBranches = remote.Branches
-
-	newSelectedLine := 0
-	if len(remote.Branches) == 0 {
-		newSelectedLine = -1
-	}
-	gui.State.Panels.RemoteBranches.SelectedLineIdx = newSelectedLine
-
-	return gui.pushContext(gui.State.Contexts.RemoteBranches)
-}
-
 func (gui *Gui) handleAddRemote() error {
 	return gui.PopupHandler.Prompt(popup.PromptOpts{
 		Title: gui.Tr.LcNewRemoteName,

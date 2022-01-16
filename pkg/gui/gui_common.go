@@ -34,3 +34,7 @@ func (self *guiCommon) RunSubprocessAndRefresh(cmdObj oscommands.ICmdObj) error 
 func (self *guiCommon) PushContext(context types.Context) error {
 	return self.gui.pushContext(context)
 }
+
+func (self *guiCommon) PopContext() error {
+	return self.gui.returnFromContext()
+}

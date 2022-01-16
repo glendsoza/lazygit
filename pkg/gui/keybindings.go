@@ -1419,13 +1419,6 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 			Description: gui.Tr.LcUndo,
 		},
 		{
-			ViewName: "branches",
-			Contexts: []string{string(REMOTES_CONTEXT_KEY)},
-			Key:      gui.getKey(config.Universal.GoInto),
-			Modifier: gocui.ModNone,
-			Handler:  gui.handleRemoteEnter,
-		},
-		{
 			ViewName:    "branches",
 			Contexts:    []string{string(REMOTES_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Universal.New),
@@ -1532,24 +1525,6 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 			Handler:  gui.scrollDownConfirmationPanel,
 		},
 		{
-			ViewName: "menu",
-			Key:      gui.getKey(config.Universal.Select),
-			Modifier: gocui.ModNone,
-			Handler:  gui.onMenuPress,
-		},
-		{
-			ViewName: "menu",
-			Key:      gui.getKey(config.Universal.Confirm),
-			Modifier: gocui.ModNone,
-			Handler:  gui.onMenuPress,
-		},
-		{
-			ViewName: "menu",
-			Key:      gui.getKey(config.Universal.ConfirmAlt1),
-			Modifier: gocui.ModNone,
-			Handler:  gui.onMenuPress,
-		},
-		{
 			ViewName:    "files",
 			Contexts:    []string{string(SUBMODULES_CONTEXT_KEY)},
 			Key:         gui.getKey(config.Universal.CopyToClipboard),
@@ -1637,6 +1612,8 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 		gui.Controllers.LocalCommits,
 		gui.Controllers.Submodules,
 		gui.Controllers.Files,
+		gui.Controllers.Remotes,
+		gui.Controllers.Menu,
 	} {
 		context := controller.Context()
 		viewName := context.GetViewName()
@@ -1652,9 +1629,7 @@ func (gui *Gui) GetInitialKeybindings() []*types.Binding {
 	// while migrating we'll continue providing keybindings from the list contexts themselves.
 	// for each controller we add above we need to remove the corresponding list context from here.
 	for _, listContext := range []types.IListContext{
-		gui.State.Contexts.Menu,
 		gui.State.Contexts.Branches,
-		gui.State.Contexts.Remotes,
 		gui.State.Contexts.RemoteBranches,
 		gui.State.Contexts.Tags,
 		gui.State.Contexts.ReflogCommits,

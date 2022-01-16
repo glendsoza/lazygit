@@ -14,8 +14,6 @@ type ListContext struct {
 	OnFocus           func(...types.OnFocusOpts) error
 	OnRenderToMain    func(...types.OnFocusOpts) error
 	OnFocusLost       func() error
-	// TODO: remove
-	OnClickSelectedItem func() error
 
 	// the boolean here tells us whether the item is nil. This is needed because you can't work it out on the calling end once the pointer is wrapped in an interface (unless you want to use reflection)
 	SelectedItem    func() (types.ListItem, bool)

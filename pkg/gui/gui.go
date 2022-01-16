@@ -215,6 +215,8 @@ type Controllers struct {
 	Submodules   *controllers.SubmodulesController
 	LocalCommits *controllers.LocalCommitsController
 	Files        *controllers.FilesController
+	Remotes      *controllers.RemotesController
+	Menu         *controllers.MenuController
 }
 
 type listPanelState struct {
@@ -562,6 +564,19 @@ func NewGui(
 			gui.Git,
 			gui.getSelectedFileNode,
 			gui.State.Contexts,
+		),
+		Remotes: controllers.NewRemotesController(
+			controllerCommon,
+			gui.State.Contexts.Remotes,
+			gui.Git,
+			gui.State.Contexts,
+			gui.getSelectedRemote,
+			func(branches []*models.RemoteBranch) { gui.State.RemoteBranches = branches },
+		),
+		Menu: controllers.NewMenuController(
+			controllerCommon,
+			gui.State.Contexts.Menu,
+			gui.getSelectedMenuItem,
 		),
 	}
 

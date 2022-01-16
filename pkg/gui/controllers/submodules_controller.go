@@ -15,10 +15,6 @@ import (
 )
 
 type SubmodulesController struct {
-	// I've said publicly that I'm against single-letter variable names but in this
-	// case I would actually prefer a _zero_ letter variable name in the form of
-	// struct embedding, but Go does not allow hiding public fields in an embedded struct
-	// to the client
 	c       *ControllerCommon
 	context types.IListContext
 	git     *commands.GitCommand

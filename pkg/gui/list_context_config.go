@@ -16,10 +16,9 @@ func (gui *Gui) menuListContext() types.IListContext {
 			Kind:            types.PERSISTENT_POPUP,
 			OnGetOptionsMap: gui.getMenuOptions,
 		},
-		GetItemsLength:      func() int { return gui.Views.Menu.LinesHeight() },
-		OnGetPanelState:     func() types.IListPanelState { return gui.State.Panels.Menu },
-		OnClickSelectedItem: gui.onMenuPress,
-		Gui:                 gui,
+		GetItemsLength:  func() int { return gui.Views.Menu.LinesHeight() },
+		OnGetPanelState: func() types.IListPanelState { return gui.State.Panels.Menu },
+		Gui:             gui,
 
 		// no GetDisplayStrings field because we do a custom render on menu creation
 	}
@@ -84,11 +83,10 @@ func (gui *Gui) remotesListContext() types.IListContext {
 			Key:        REMOTES_CONTEXT_KEY,
 			Kind:       types.SIDE_CONTEXT,
 		},
-		GetItemsLength:      func() int { return len(gui.State.Remotes) },
-		OnGetPanelState:     func() types.IListPanelState { return gui.State.Panels.Remotes },
-		OnRenderToMain:      OnFocusWrapper(gui.remotesRenderToMain),
-		OnClickSelectedItem: gui.handleRemoteEnter,
-		Gui:                 gui,
+		GetItemsLength:  func() int { return len(gui.State.Remotes) },
+		OnGetPanelState: func() types.IListPanelState { return gui.State.Panels.Remotes },
+		OnRenderToMain:  OnFocusWrapper(gui.remotesRenderToMain),
+		Gui:             gui,
 		GetDisplayStrings: func(startIdx int, length int) [][]string {
 			return presentation.GetRemoteListDisplayStrings(gui.State.Remotes, gui.State.Modes.Diffing.Ref)
 		},
